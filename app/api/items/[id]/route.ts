@@ -1,15 +1,16 @@
+import { ApiError } from "@/lib/errors";
 import { itemsService } from "@/lib/services/items-service";
 import { type NextRequest, NextResponse } from "next/server";
-import { ApiError } from "@/lib/errors";
 
-export async function GET() {
+export async function GET({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   try {
-    const { items, error } = await itemsService.getItems();
+    const { item, error } = await itemsService.getItemById(id);
 
     if (error) throw error;
-    return NextResponse.json({ items });
+    return NextResponse.json({ item });
   } catch (error) {
-    console.error("[GET] Items route error:", error);
+    console.error("Logout route error:", error);
     if (error instanceof ApiError) {
       return NextResponse.json(
         { error: error.message },
@@ -20,15 +21,19 @@ export async function GET() {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const body = await request.json();
   try {
-    const body = await request.json()
-    const { item, error } = await itemsService.createItem(body);
+    const { item, error } = await itemsService.updateItem(id, body);
 
     if (error) throw error;
     return NextResponse.json({ item });
   } catch (error) {
-    console.error("[POST] Items route error:", error);
+    console.error("Logout route error:", error);
     if (error instanceof ApiError) {
       return NextResponse.json(
         { error: error.message },

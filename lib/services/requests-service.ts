@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { ApiError } from "@/lib/errors";
 import type {
   Request,
-  RequestItem,
   CreateRequestBody,
   UpdateRequestRequest,
 } from "@/lib/types";

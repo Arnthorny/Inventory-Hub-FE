@@ -4,7 +4,7 @@ import type React from "react";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useLogin } from "@/hooks/use-login"; // Import your new hook
+import { useLogin } from "@/hooks/use-login";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,7 +27,6 @@ export default function LoginPage() {
     const errorMsg = searchParams.get("error");
     setUrlError(errorMsg);
 
-    // window.history.replaceState(null, "", "/auth/login");
   }, [searchParams]);
 
   const [email, setEmail] = useState("");

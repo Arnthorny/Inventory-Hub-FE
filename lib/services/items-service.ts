@@ -1,16 +1,26 @@
-import { createClient } from "@/lib/supabase/server";
-import { authService } from "@/lib/services/auth-service";
 import { ApiError } from "@/lib/errors";
-
 import type { Item, CreateItemRequest, UpdateItemRequest } from "@/lib/types";
+import { URL, URLSearchParams } from "node:url";
+import { authService } from "./auth-service";
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:7001/api/v1";
 
 export const itemsService = {
-  async getItems(): Promise<{ items: Item[]; error: any }> {
+  async getItems(
+    page: number = 1,
+    limit: number = 20
+  ): Promise<{ items: Item[]; error: any }> {
     const token = await authService.getAccessToken();
+
+    const url = new URL(`${API_URL}/items`);
+    url.search = new URLSearchParams({
+      page: String(page),
+      fields: "all",
+      limit: String(limit),
+    }).toString();
+
     try {
-      const res = await fetch(`${API_URL}/items`, {
+      const res = await fetch(url, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -42,55 +52,61 @@ export const itemsService = {
     const token = await authService.getAccessToken();
     try {
       const res = await fetch(`${API_URL}/items/${id}`, {
-        method: "POST",
+        method: "GET",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       });
 
-      const data = await res.json();
+      const json = await res.json();
 
       if (res.ok) {
-        console.log("Fetched items, count:", data?.length || 0);
-        return { item: data.data, error: null };
+        console.log("Fetched item:", json.data || null);
+        return { item: json.data, error: null };
       }
 
       let errMsg: string =
-        data.errors || data.message || "Items Retrieval Failed";
+        json.errors || json.message || "Items Retrieval Failed";
       if (Array.isArray(errMsg)) {
         errMsg = errMsg.map((e: any) => e.msg).join(", ");
       }
       throw new ApiError(errMsg, res.status);
     } catch (error) {
+      console.error("Items service exception:", error);
       return { item: null, error };
     }
   },
 
   async createItem(
-    request: CreateItemRequest
+    body: CreateItemRequest
   ): Promise<{ item: Item | null; error: any }> {
     try {
-      const supabase = await createClient();
-      const { data, error } = await supabase
-        .from("items")
-        .insert({
-          name: request.name,
-          description: request.description || null,
-          category: request.category || null,
-          available: request.available || 0,
-          damaged: request.damaged || 0,
-          in_use: request.in_use || 0,
-        })
-        .select()
-        .single();
+      const token = await authService.getAccessToken();
+      const res = await fetch(`${API_URL}/items`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
 
-      if (error) {
-        console.error("[v0] Create item error:", error);
+      const json = await res.json();
+
+      if (res.ok) {
+        console.log("Created item:", json.data || null);
+        return { item: json.data, error: null };
       }
-      return { item: data, error };
+
+      let errMsg: string =
+        json.errors || json.message || "Items Creation Failed";
+      if (Array.isArray(errMsg)) {
+        errMsg = errMsg.map((e: any) => e.msg).join(", ");
+      }
+      throw new ApiError(errMsg, res.status);
     } catch (error) {
-      console.error("[v0] Create item exception:", error);
+      console.error("Items service exception:", error);
       return { item: null, error };
     }
   },
@@ -100,26 +116,31 @@ export const itemsService = {
     request: UpdateItemRequest
   ): Promise<{ item: Item | null; error: any }> {
     try {
-      const supabase = await createClient();
-      const { data, error } = await supabase
-        .from("items")
-        .update(request)
-        .eq("id", id)
-        .select()
-        .single();
-      return { item: data, error };
-    } catch (error) {
-      return { item: null, error };
-    }
-  },
+      const token = await authService.getAccessToken();
+      const res = await fetch(`${API_URL}/items/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(request),
+      });
 
-  async deleteItem(id: string): Promise<{ error: any }> {
-    try {
-      const supabase = await createClient();
-      const { error } = await supabase.from("items").delete().eq("id", id);
-      return { error };
+      const json = await res.json();
+
+      if (res.ok) {
+        console.log("Updated item:", json.data || null);
+        return { item: json.data, error: null };
+      }
+
+      let errMsg: string = json.errors || json.message || "Items update Failed";
+      if (Array.isArray(errMsg)) {
+        errMsg = errMsg.map((e: any) => e.msg).join(", ");
+      }
+      throw new ApiError(errMsg, res.status);
     } catch (error) {
-      return { error };
+      console.error("Items service exception:", error);
+      return { item: null, error };
     }
   },
 };

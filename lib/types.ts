@@ -4,12 +4,13 @@ export interface User {
   id: string;
   email: string;
   role: UserRole;
-  created_at: string;
-  updated_at: string;
 
   first_name: string;
   last_name: string;
   phone: string;
+
+  created_at: Date;
+  updated_at: Date;
 
   last_login: Date;
 }
@@ -17,14 +18,15 @@ export interface User {
 export interface Item {
   id: string;
   name: string;
-  description: string | null;
-  available?: number;
+  description: string;
+  location?: string;
+  level: UserRole;
   total?: number;
+  available: number;
   damaged?: number;
   in_use?: number;
-  level: UserRole;
-  created_at: string;
-  updated_at: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
 export interface Request {
@@ -73,7 +75,7 @@ export interface SignupFormData {
   first_name: string;
   last_name: string;
   phone: string;
-  role: "intern" | "staff" | "admin";
+  role: Exclude<UserRole, 'guest'>;
   password: string;
   confirm_password: string;
 }
@@ -83,23 +85,26 @@ export interface LoginFormData {
   password: string;
 }
 
-export interface ResponseBase {
+export interface ApiResponseBase {
   success: boolean;
   message: string;
+  errors?: object[];
 }
 
-export interface SignInTokensRes extends ResponseBase {
+export interface ApiResponse<T> extends ApiResponseBase {
+  data: T;
+}
+
+
+export interface SignInTokensRes extends ApiResponseBase {
   access_token: string;
   refresh_token: string;
 }
 
 export interface LoginResponse extends SignInTokensRes {
-  data: any;
+  data: User;
 }
 
-export interface SignupResponse extends ResponseBase {
-  data: any;
-}
 
 export interface CreateGuestRequest {
   type: "guest";
@@ -140,19 +145,13 @@ export interface DashboardStats {
   total_approved_requests: number;
 }
 
-export interface ApiResponse<T> {
-  data?: T;
-  error?: string;
-  status: "success" | "error";
-}
 
-export interface ApiListResponse<T> {
+export interface PaginatedListResponse<T> extends ApiResponseBase {
   data: T[];
-  total: number;
-  page: number;
-  limit: number;
-  status: "success" | "error";
-  error?: string;
+  total: number
+  offset: number
+  limit: number
+  page: number
 }
 
 // Auth
@@ -169,21 +168,17 @@ export interface SignUpRequest {
 // Items
 export interface CreateItemRequest {
   name: string;
-  description?: string;
-  category?: string;
-  available?: number;
-  damaged?: number;
-  in_use?: number;
+  description: string;
+  category: string;
+  level: UserRole;
+  location: string;
+  total: number;
+  available: number;
+  damaged: number;
+  in_use: number;
 }
 
-export interface UpdateItemRequest {
-  name?: string;
-  description?: string;
-  category?: string;
-  available?: number;
-  damaged?: number;
-  in_use?: number;
-}
+export type UpdateItemRequest = Partial<CreateItemRequest>
 
 // Requests
 export interface CreateRequestItemRequest {

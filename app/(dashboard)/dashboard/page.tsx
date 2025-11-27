@@ -1,7 +1,3 @@
-import { redirect } from "next/navigation";
-import { authService } from "@/lib/services/auth-service";
-import { itemsService } from "@/lib/services/items-service";
-import { requestsService } from "@/lib/services/requests-service";
 import { StatsGrid } from "@/components/dashboard/stats-grid";
 
 import {

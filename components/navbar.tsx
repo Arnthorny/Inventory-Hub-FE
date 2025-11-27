@@ -34,7 +34,7 @@ export function Navbar({ user }: NavbarProps) {
         {user && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2 bg-transparent">
+              <Button variant="outline" className="gap-2 bg-transparent cursor-pointer">
                 <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
                   <span className="text-xs font-semibold text-muted-foreground">
                     {user.email.charAt(0).toUpperCase()}

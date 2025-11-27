@@ -1,11 +1,11 @@
 import type {
   SignupFormData,
   LoginFormData,
-  SignupResponse,
-  ResponseBase,
-  LoginResponse,
+  ApiResponse,
   SignInTokensRes,
   User,
+  LoginResponse,
+  ApiResponseBase,
 } from "@/lib/types";
 import { ApiError } from "@/lib/errors";
 import { cookies, headers } from "next/headers";
@@ -22,10 +22,10 @@ export const authService = {
       body: JSON.stringify(credentials),
     });
 
-    const data = await res.json();
-    if (res.ok) return data;
+    const json = await res.json();
+    if (res.ok) return json;
 
-    let errMsg: string = data.errors || data.message || "Signin Failed";
+    let errMsg: string = json.errors || json.message || "Signin Failed";
     if (Array.isArray(errMsg)) {
       errMsg = errMsg.map((e: any) => e.msg).join(", ");
     }
@@ -33,18 +33,18 @@ export const authService = {
     throw new ApiError(errMsg, res.status);
   },
 
-  async signUp(body: SignupFormData): Promise<SignupResponse> {
+  async signUp(body: SignupFormData): Promise<ApiResponse<User>> {
     const res = await fetch(`${API_URL}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
 
-    const data = await res.json();
+    const json = await res.json();
 
-    if (res.ok) return data;
+    if (res.ok) return json;
 
-    let errMsg = data.errors || data.message || "Signup Failed";
+    let errMsg = json.errors || json.message || "Signup Failed";
     if (Array.isArray(errMsg)) {
       errMsg = errMsg.map((e: any) => e.msg).join(", ");
     }
@@ -103,7 +103,7 @@ export const authService = {
     throw new ApiError(errMsg, res.status);
   }),
 
-  async logout(): Promise<ResponseBase> {
+  async logout(): Promise<ApiResponseBase> {
     const token = await this.getAccessToken();
     const res = await fetch(`${API_URL}/auth/logout`, {
       method: "POST",
