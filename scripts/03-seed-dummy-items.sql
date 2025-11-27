@@ -1,5 +1,5 @@
 -- Insert dummy items for design studio inventory
-INSERT INTO items (name, description, category, available, damaged, in_use) VALUES
+INSERT INTO items (name, description, level, total, available, damaged, in_use) VALUES
 ('Professional Camera - Canon EOS R5', 'Full-frame mirrorless camera, 45MP, excellent for product photography', 'Photography Equipment', 3, 0, 1),
 ('Studio Lighting Kit - 3 Piece', 'Professional LED lighting kit with adjustable color temperature', 'Lighting', 5, 1, 2),
 ('Tripod - Carbon Fiber Heavy Duty', 'Sturdy carbon fiber tripod with ball head, max height 6ft', 'Photography Equipment', 8, 0, 0),

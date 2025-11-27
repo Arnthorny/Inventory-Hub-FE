@@ -1,7 +1,6 @@
-"use client"
+"use client";
 
-import { createClient } from "@/lib/supabase/client"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,32 +8,25 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
-import type { User } from "@/lib/types"
+} from "@/components/ui/dropdown-menu";
+import type { User } from "@/lib/types";
+import { useLogout } from "@/hooks/use-logout";
 
 interface NavbarProps {
-  user: User | null
+  user: User | null;
 }
 
 export function Navbar({ user }: NavbarProps) {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
-
-  const handleLogout = async () => {
-    setIsLoading(true)
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push("/auth/login")
-  }
+  const { logout, isLoading } = useLogout();
 
   return (
     <nav className="border-b border-border bg-card">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">DI</span>
+            <span className="text-primary-foreground font-bold text-sm">
+              DS
+            </span>
           </div>
           <h1 className="text-xl font-bold text-foreground">Inventory Hub</h1>
         </div>
@@ -54,11 +46,14 @@ export function Navbar({ user }: NavbarProps) {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+              <DropdownMenuItem
+                disabled
+                className="text-xs text-muted-foreground"
+              >
                 Role: {user.role}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} disabled={isLoading}>
+              <DropdownMenuItem onClick={logout} disabled={isLoading}>
                 {isLoading ? "Logging out..." : "Logout"}
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -66,5 +61,5 @@ export function Navbar({ user }: NavbarProps) {
         )}
       </div>
     </nav>
-  )
+  );
 }
