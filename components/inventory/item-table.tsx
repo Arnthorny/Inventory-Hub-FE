@@ -1,18 +1,30 @@
-"use client"
+"use client";
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import type { Item } from "@/lib/types"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import type { Item } from "@/lib/types";
 
 interface ItemTableProps {
-  items: Item[]
-  onEdit?: (item: Item) => void
-  onDelete?: (id: string) => Promise<void>
-  isAdmin?: boolean
+  items: Item[];
+  onEdit?: (item: Item) => void;
+  onDelete?: (id: string) => Promise<void>;
+  isAdmin?: boolean;
 }
 
-export function ItemTable({ items, onEdit, onDelete, isAdmin = false }: ItemTableProps) {
-  const getTotalQuantity = (item: Item) => item.available + item.in_use + item.damaged
+export function ItemTable({
+  items,
+  onEdit,
+  onDelete,
+  isAdmin = false,
+}: ItemTableProps) {
+  const getTotalQuantity = (item: Item) => item?.total || 0;
 
   return (
     <div className="border border-border rounded-lg overflow-hidden">
@@ -37,7 +49,10 @@ export function ItemTable({ items, onEdit, onDelete, isAdmin = false }: ItemTabl
         <TableBody>
           {items.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={isAdmin ? 7 : 3} className="text-center text-muted-foreground py-8">
+              <TableCell
+                colSpan={isAdmin ? 7 : 3}
+                className="text-center text-muted-foreground py-8"
+              >
                 No items found
               </TableCell>
             </TableRow>
@@ -47,25 +62,44 @@ export function ItemTable({ items, onEdit, onDelete, isAdmin = false }: ItemTabl
                 <TableCell>
                   <div>
                     <p className="font-medium">{item.name}</p>
-                    {item.description && <p className="text-xs text-muted-foreground">{item.description}</p>}
+                    {item.description && (
+                      <p className="text-xs text-muted-foreground">
+                        {item.description}
+                      </p>
+                    )}
                   </div>
                 </TableCell>
-                <TableCell className="text-muted-foreground">{item.category || "-"}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {item.category || "-"}
+                </TableCell>
                 {isAdmin ? (
                   <>
-                    <TableCell className="text-right">{item.available}</TableCell>
+                    <TableCell className="text-right">
+                      {item.available}
+                    </TableCell>
                     <TableCell className="text-right">{item.in_use}</TableCell>
-                    <TableCell className="text-right text-destructive">{item.damaged}</TableCell>
-                    <TableCell className="text-right font-medium">{getTotalQuantity(item)}</TableCell>
+                    <TableCell className="text-right text-destructive">
+                      {item.damaged}
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {getTotalQuantity(item)}
+                    </TableCell>
                   </>
                 ) : (
-                  <TableCell className="text-right font-medium">{item.available}</TableCell>
+                  <TableCell className="text-right font-medium">
+                    {item.available}
+                  </TableCell>
                 )}
                 {isAdmin && (
                   <TableCell>
                     <div className="flex gap-2">
                       {onEdit && (
-                        <Button variant="outline" size="sm" onClick={() => onEdit(item)}>
+                        <Button
+                          variant="outline"
+                          className="cursor-pointer"
+                          size="sm"
+                          onClick={() => onEdit(item)}
+                        >
                           Edit
                         </Button>
                       )}
@@ -78,5 +112,5 @@ export function ItemTable({ items, onEdit, onDelete, isAdmin = false }: ItemTabl
         </TableBody>
       </Table>
     </div>
-  )
+  );
 }

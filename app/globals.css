@@ -144,3 +144,9 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Add this to your globals.css */
+select,
+option {
+  font-family: inherit;
+}

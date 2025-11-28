@@ -19,6 +19,7 @@ export interface Item {
   id: string;
   name: string;
   description: string;
+  category: string;
   location?: string;
   level: UserRole;
   total?: number;
@@ -75,7 +76,7 @@ export interface SignupFormData {
   first_name: string;
   last_name: string;
   phone: string;
-  role: Exclude<UserRole, 'guest'>;
+  role: Exclude<UserRole, "guest">;
   password: string;
   confirm_password: string;
 }
@@ -95,7 +96,6 @@ export interface ApiResponse<T> extends ApiResponseBase {
   data: T;
 }
 
-
 export interface SignInTokensRes extends ApiResponseBase {
   access_token: string;
   refresh_token: string;
@@ -104,7 +104,6 @@ export interface SignInTokensRes extends ApiResponseBase {
 export interface LoginResponse extends SignInTokensRes {
   data: User;
 }
-
 
 export interface CreateGuestRequest {
   type: "guest";
@@ -145,13 +144,16 @@ export interface DashboardStats {
   total_approved_requests: number;
 }
 
+export interface PaginatedListBase<T> {
+  results: T[];
+  total: number;
+  offset: number;
+  limit: number;
+  page: number;
+}
 
 export interface PaginatedListResponse<T> extends ApiResponseBase {
-  data: T[];
-  total: number
-  offset: number
-  limit: number
-  page: number
+  data: PaginatedListBase<T>;
 }
 
 // Auth
@@ -178,7 +180,7 @@ export interface CreateItemRequest {
   in_use: number;
 }
 
-export type UpdateItemRequest = Partial<CreateItemRequest>
+export type UpdateItemRequest = Partial<CreateItemRequest>;
 
 // Requests
 export interface CreateRequestItemRequest {

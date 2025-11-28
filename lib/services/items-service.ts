@@ -1,5 +1,10 @@
 import { ApiError } from "@/lib/errors";
-import type { Item, CreateItemRequest, UpdateItemRequest } from "@/lib/types";
+import type {
+  Item,
+  CreateItemRequest,
+  UpdateItemRequest,
+  PaginatedListBase,
+} from "@/lib/types";
 import { URL, URLSearchParams } from "node:url";
 import { authService } from "./auth-service";
 const API_URL =
@@ -8,16 +13,22 @@ const API_URL =
 export const itemsService = {
   async getItems(
     page: number = 1,
-    limit: number = 20
-  ): Promise<{ items: Item[]; error: any }> {
+    limit: number = 10,
+    search?: string,
+    category?: string
+  ): Promise<{ items_res: PaginatedListBase<Item> | null; error: any }> {
     const token = await authService.getAccessToken();
 
     const url = new URL(`${API_URL}/items`);
-    url.search = new URLSearchParams({
+    const sParams: Record<string, string> = {
       page: String(page),
       fields: "all",
       limit: String(limit),
-    }).toString();
+    };
+
+    if (search) sParams["search"] = search;
+    if (category) sParams["category"] = category;
+    url.search = new URLSearchParams(sParams).toString();
 
     try {
       const res = await fetch(url, {
@@ -31,8 +42,8 @@ export const itemsService = {
       const json = await res.json();
 
       if (res.ok) {
-        console.log("Fetched items count: ", json.data.results.length || []);
-        return { items: json.data.results || [], error: null };
+        console.log("Fetched items count: ", json?.data?.results.length || []);
+        return { items_res: json.data || [], error: null };
       }
 
       let errMsg: string =
@@ -44,7 +55,7 @@ export const itemsService = {
       throw new ApiError(errMsg, res.status);
     } catch (error) {
       console.error("Items service exception:", error);
-      return { items: [], error };
+      return { items_res: null, error };
     }
   },
 
@@ -118,7 +129,7 @@ export const itemsService = {
     try {
       const token = await authService.getAccessToken();
       const res = await fetch(`${API_URL}/items/${id}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

@@ -1,11 +1,11 @@
-// components/inventory/item-form.tsx
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react"; // <--- Import useRef
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronsUpDown, Camera, X } from "lucide-react";
+import { Check, ChevronsUpDown, Camera, X } from "lucide-react"; // <--- Import Camera, X
 
 import {
   createItemSchema,
@@ -28,38 +28,30 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Item } from "@/lib/types";
-import {
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Select,
-} from "@/components/ui/select";
 
-interface ItemFormProps {
+interface CreateItemFormProps {
   onSuccess: () => void;
-  initialData?: Item; // <--- NEW PROP
 }
 
-export function ItemForm({ onSuccess, initialData }: ItemFormProps) {
+export function CreateItemForm({ onSuccess }: CreateItemFormProps) {
   const queryClient = useQueryClient();
+
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const isEditing = !!initialData;
 
+  // 1. Setup Form
   const form = useForm<CreateItemFormValues>({
     resolver: zodResolver(createItemSchema),
     defaultValues: {
-      name: initialData?.name || "",
-      category: initialData?.category || "",
-      level: (initialData?.level as any) || "intern",
-      description: initialData?.description || "",
-      location: initialData?.location || "",
-      available: initialData?.available || 0,
-      in_use: initialData?.in_use || 0,
-      damaged: initialData?.damaged || 0,
-      total: initialData?.total || 0,
+      name: "",
+      description: "",
+      category: "",
+      level: "intern",
+      location: "",
+      available: 0,
+      in_use: 0,
+      damaged: 0,
+      total: 0,
     },
   });
 
@@ -85,32 +77,25 @@ export function ItemForm({ onSuccess, initialData }: ItemFormProps) {
     form.setValue("total", sum, { shouldValidate: true });
   }, [available, inUse, damaged, form]);
 
-  const mutation = useMutation({
+  // 4. Mutation
+  const createItemMutation = useMutation({
     mutationFn: async (values: CreateItemFormValues) => {
-      const url = isEditing ? `/api/items/${initialData.id}` : "/api/items";
-      const method = isEditing ? "PATCH" : "POST";
-
-      const res = await fetch(url, {
-        method,
+      const res = await fetch("/api/items", {
+        method: "POST",
         body: JSON.stringify(values),
       });
-
-      if (!res.ok) throw new Error("Failed to save item");
+      if (!res.ok) throw new Error("Failed to create item");
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["inventory-items"] });
-      // If editing, invalidate the specific item query too
-      if (initialData) {
-        queryClient.invalidateQueries({ queryKey: ["item", initialData.id] });
-      }
-      if (!isEditing) form.reset();
+      form.reset();
       onSuccess();
     },
   });
 
   function onSubmit(data: CreateItemFormValues) {
-    mutation.mutate(data);
+    createItemMutation.mutate(data);
   }
 
   // 2. Handle File Selection
@@ -139,13 +124,10 @@ export function ItemForm({ onSuccess, initialData }: ItemFormProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>{isEditing ? "Edit Item" : "Create New Item"}</CardTitle>
-            <CardDescription>
-              {isEditing
-                ? `Update details for ${initialData.name}`
-                : "Add a new item to your inventory"}
-            </CardDescription>
+            <CardTitle>Create New Item</CardTitle>
+            <CardDescription>Add a new item to your inventory</CardDescription>
           </div>
+          {/* 4. THE AI SCAN BUTTON */}
           <div className="flex gap-2">
             <input
               type="file"
@@ -225,6 +207,7 @@ export function ItemForm({ onSuccess, initialData }: ItemFormProps) {
                   <FormItem>
                     <FormLabel>Category</FormLabel>
                     <div className="relative">
+                      {/* Native select is easier for category lists, but you can swap for Combobox if list is huge */}
                       <select
                         className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
                         {...field}
@@ -281,22 +264,15 @@ export function ItemForm({ onSuccess, initialData }: ItemFormProps) {
                   <FormItem>
                     <FormLabel>Access Level</FormLabel>
                     <div className="relative">
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
+                      <select
+                        className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
+                        {...field}
                       >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a role" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="guest">Guest</SelectItem>
-                          <SelectItem value="intern">Intern</SelectItem>
-                          <SelectItem value="staff">Staff</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
-                        </SelectContent>
-                      </Select>
+                        <option value="guest">Guest</option>
+                        <option value="intern">Intern</option>
+                        <option value="staff">Staff</option>
+                        <option value="admin">Admin</option>
+                      </select>
                       {/* Chevron Icon for style */}
                       <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-muted-foreground">
                         <ChevronsUpDown className="h-4 w-4 opacity-50" />
@@ -372,16 +348,16 @@ export function ItemForm({ onSuccess, initialData }: ItemFormProps) {
             </div>
 
             <div className="flex justify-end gap-4">
-              <Button type="submit" disabled={mutation.isPending}>
-                {mutation.isPending
-                  ? "Saving..."
-                  : isEditing
-                  ? "Update Item"
-                  : "Create Item"}
+              <Button
+                type="submit"
+                className="w-full md:w-auto"
+                disabled={createItemMutation.isPending}
+              >
+                {createItemMutation.isPending ? "Creating..." : "Create Item"}
               </Button>
             </div>
 
-            {mutation.isError && (
+            {createItemMutation.isError && (
               <p className="text-red-500 text-sm mt-2">
                 Failed to create item.
               </p>

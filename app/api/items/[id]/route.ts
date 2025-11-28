@@ -2,15 +2,18 @@ import { ApiError } from "@/lib/errors";
 import { itemsService } from "@/lib/services/items-service";
 import { type NextRequest, NextResponse } from "next/server";
 
-export async function GET({ params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   const { id } = await params;
   try {
     const { item, error } = await itemsService.getItemById(id);
 
     if (error) throw error;
-    return NextResponse.json({ item });
+    return NextResponse.json(item);
   } catch (error) {
-    console.error("Logout route error:", error);
+    console.error("[GET]Item route error:", error);
     if (error instanceof ApiError) {
       return NextResponse.json(
         { error: error.message },
@@ -21,7 +24,7 @@ export async function GET({ params }: { params: Promise<{ id: string }> }) {
   }
 }
 
-export async function PUT(
+export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -31,9 +34,9 @@ export async function PUT(
     const { item, error } = await itemsService.updateItem(id, body);
 
     if (error) throw error;
-    return NextResponse.json({ item });
+    return NextResponse.json(item );
   } catch (error) {
-    console.error("Logout route error:", error);
+    console.error("[PATCH] Item route error:", error);
     if (error instanceof ApiError) {
       return NextResponse.json(
         { error: error.message },
