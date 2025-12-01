@@ -12,9 +12,11 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get("category") || undefined;
 
     const { items_res, error } = await itemsService.getItems(
-      +page, 
+      +page,
       +limit,
-    search, category);
+      search,
+      category
+    );
 
     if (error) throw error;
     return NextResponse.json({ items_res });
@@ -36,7 +38,7 @@ export async function POST(request: NextRequest) {
     const { item, error } = await itemsService.createItem(body);
 
     if (error) throw error;
-    return NextResponse.json({ item });
+    return NextResponse.json({ item }, { status: 201 });
   } catch (error) {
     console.error("[POST] Items route error:", error);
     if (error instanceof ApiError) {

@@ -73,7 +73,7 @@ export const itemsService = {
       const json = await res.json();
 
       if (res.ok) {
-        console.log("Fetched item:", json.data || null);
+        console.log("Fetched item:", json.message || null);
         return { item: json.data, error: null };
       }
 

@@ -15,10 +15,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Item, PaginatedListBase } from "@/lib/types";
+import type { Item } from "@/lib/types";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { RoleGate } from "@/components/auth/role-gate";
 import { Search, Filter, X } from "lucide-react";
+import { clientService } from "@/lib/services/client-service";
+import { ListSkeleton } from "@/components/inventory/list-skeleton";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -49,34 +51,21 @@ export default function InventoryPage() {
       currentPage,
       debouncedSearch,
       selectedCategory,
-    ], // <--- Unique key per page
-    queryFn: async () => {
-      const params = new URLSearchParams({
-        page: String(currentPage),
-        limit: String(ITEMS_PER_PAGE),
-      });
-
-      if (searchQuery) params.append("search", debouncedSearch);
-
-      if (selectedCategory && selectedCategory !== "all")
-        params.append("category", selectedCategory);
-
-      const res = await fetch(`/api/items?${params.toString()}`);
-      if (!res.ok) throw new Error("Failed to fetch items");
-      const { items_res } = await res.json();
-      return items_res as PaginatedListBase<Item>;
-    },
+    ], // <--- Unique key per page per search per category
+    queryFn: () =>
+      clientService.getItems(
+        currentPage,
+        ITEMS_PER_PAGE,
+        debouncedSearch,
+        selectedCategory
+      ),
     // Keep previous data visible while fetching next page (prevents layout jump)
     placeholderData: (previousData) => previousData,
   });
 
   const { data: categories = [] } = useQuery({
     queryKey: ["categories"],
-    queryFn: async () => {
-      const res = await fetch("/api/categories");
-      if (!res.ok) return ["general", "design", "prototyping", "electronics"];
-      return res.json();
-    },
+    queryFn: () => clientService.getCategories(),
     staleTime: 1000 * 60 * 30,
   });
 
@@ -93,17 +82,20 @@ export default function InventoryPage() {
   const totalItems = items_res?.total || 0;
   const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
 
-  const handleEdit = (item: Item) => {
-    router.push(`/inventory/${item.id}`);
+  const handleEdit = (id: string) => {
+    router.push(`/inventory/${id}`);
+  };
+  const handleDelete = async (id: string) => {
+    return;
   };
 
-  if (isUserLoading || (isItemsLoading && !items_res)) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        Loading...
-      </div>
-    );
-  }
+  // if (isUserLoading || (isItemsLoading && !items_res)) {
+  //   return (
+  //     <div className="flex h-[50vh] items-center justify-center">
+  //       Loading...
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="space-y-8">
@@ -113,7 +105,11 @@ export default function InventoryPage() {
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Inventory
           </h1>
-          <p className="text-muted-foreground mt-1">{totalItems} items found</p>
+          {!isItemsLoading && (
+            <p className="text-muted-foreground mt-1">
+              {totalItems} items available
+            </p>
+          )}
         </div>
         <RoleGate allowedRoles={["admin"]}>
           <Button onClick={() => setShowForm(!showForm)}>
@@ -185,16 +181,15 @@ export default function InventoryPage() {
 
       {/* TABLE */}
       <div className="relative">
-        {isItemsLoading && !items.length && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-10">
-            Loading...
-          </div>
+        {isItemsLoading && !items.length ? (
+          <ListSkeleton />
+        ) : (
+          <ItemTable
+            items={items}
+            isAdmin={user?.role === "admin"}
+            onEdit={user?.role === "admin" ? handleEdit : undefined}
+          />
         )}
-        <ItemTable
-          items={items}
-          isAdmin={user?.role === "admin"}
-          onEdit={user?.role === "admin" ? handleEdit : undefined}
-        />
       </div>
 
       {/* PAGINATION CONTROLS */}
@@ -202,6 +197,7 @@ export default function InventoryPage() {
         <div className="flex items-center justify-center gap-2">
           <Button
             variant="outline"
+            className="cursor-pointer"
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1 || isItemsLoading}
           >
@@ -212,6 +208,7 @@ export default function InventoryPage() {
           </span>
           <Button
             variant="outline"
+            className="cursor-pointer"
             onClick={() => {
               if (!isPlaceholderData && currentPage < totalPages) {
                 setCurrentPage((p) => p + 1);

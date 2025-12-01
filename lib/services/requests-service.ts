@@ -1,9 +1,9 @@
-import { createClient } from "@/lib/supabase/server";
 import { ApiError } from "@/lib/errors";
 import type {
   Request,
   CreateRequestBody,
-  UpdateRequestRequest,
+  PaginatedListBase,
+  ItemReq,
 } from "@/lib/types";
 import { authService } from "@/lib/services/auth-service";
 
@@ -12,14 +12,57 @@ const API_URL =
 
 export const requestsService = {
   async getRequests(
-    isAdmin: boolean
-  ): Promise<{ requests: Request[]; error: any }> {
+    page: number = 1,
+    limit: number = 10,
+    statusFilter?: string,
+    roleFilter?: string,
+    guest_id?: string,
+    user_id?: string
+  ): Promise<PaginatedListBase<Request> | null> {
+    const token = await authService.getAccessToken();
+
+    const url = new URL(`${API_URL}/requests`);
+    const sParams: Record<string, string> = {
+      page: String(page),
+      fields: "all",
+      limit: String(limit),
+    };
+    console.log(statusFilter);
+
+    if (statusFilter) sParams["status"] = statusFilter;
+    if (roleFilter) sParams["role"] = roleFilter;
+    if (guest_id) sParams["guest_id"] = guest_id;
+    if (user_id) sParams["user_id"] = user_id;
+    url.search = new URLSearchParams(sParams).toString();
+    const res = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const json = await res.json();
+    const data = json.data;
+
+    if (res.ok) {
+      console.log("Fetched requests count: ", json?.data?.results.length || []);
+      return data || [];
+    }
+
+    let errMsg: string =
+      json.errors || json.message || "Requests Retrieval Failed";
+    if (Array.isArray(errMsg)) {
+      errMsg = errMsg.map((e: any) => e.msg).join(", ");
+    }
+
+    throw new ApiError(errMsg, res.status);
+  },
+
+  async getReqById(id: string): Promise<{ req: Request | null; error: any }> {
     const token = await authService.getAccessToken();
     try {
-      const url = isAdmin
-        ? `${API_URL}/requests`
-        : `${API_URL}/users/me/requests`;
-      const res = await fetch(url, {
+      const res = await fetch(`${API_URL}/requests/${id}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -30,213 +73,122 @@ export const requestsService = {
       const json = await res.json();
 
       if (res.ok) {
-        console.log("Fetched requests, count:", json.data.results.length || 0);
-        return { requests: json.data.results || [], error: null };
+        console.log("Fetched request:", json.message || null);
+        return { req: json.data, error: null };
       }
 
       let errMsg: string =
-        json.errors || json.message || "Requests Retrieval Failed";
+        json.errors || json.message || "Request Retrieval Failed";
       if (Array.isArray(errMsg)) {
         errMsg = errMsg.map((e: any) => e.msg).join(", ");
       }
-
       throw new ApiError(errMsg, res.status);
     } catch (error) {
-      console.error("Get requests exception:", error);
-      return { requests: [], error };
-    }
-  },
-
-  async getRequestsByUser(
-    userId: string
-  ): Promise<{ requests: Request[]; error: any }> {
-    try {
-      const supabase = await createClient();
-      const { data, error } = await supabase
-        .from("requests")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false });
-      return { requests: data || [], error };
-    } catch (error) {
-      return { requests: [], error };
-    }
-  },
-
-  async getRequestById(
-    id: string
-  ): Promise<{ request: Request | null; error: any }> {
-    try {
-      const supabase = await createClient();
-      const { data, error } = await supabase
-        .from("requests")
-        .select("*")
-        .eq("id", id)
-        .single();
-      return { request: data, error };
-    } catch (error) {
-      return { request: null, error };
+      console.error("Request service exception:", error);
+      return { req: null, error };
     }
   },
 
   async createRequest(
-    userId: string,
-    request: CreateRequestBody
-  ): Promise<{ request: Request | null; error: any }> {
+    body: CreateRequestBody
+  ): Promise<{ req: Request | null; error: any }> {
     try {
-      const supabase = await createClient();
-      console.log("[v0] Creating request for user:", userId);
+      console.log(body);
+      const token = await authService.getAccessToken();
+      const res = await fetch(`${API_URL}/requests`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
 
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("role")
-        .eq("id", userId)
-        .single();
+      const json = await res.json();
 
-      if (userError) throw userError;
-
-      const userRole = userData?.role || "guest";
-
-      const { data: requestItemsData, error: itemsError } = await supabase
-        .from("request_items")
-        .select("item_id")
-        .eq("request_id", request.id);
-
-      // Check if user can auto-approve based on item levels
-      let shouldAutoApprove = true;
-      if (requestItemsData && requestItemsData.length > 0) {
-        const { data: itemsData } = await supabase
-          .from("items")
-          .select("level")
-          .in(
-            "id",
-            requestItemsData.map((ri: any) => ri.item_id)
-          );
-
-        // Role hierarchy: admin > staff > intern > guest
-        const roleHierarchy: Record<string, number> = {
-          admin: 4,
-          staff: 3,
-          intern: 2,
-          guest: 1,
-        };
-        const userRoleLevel = roleHierarchy[userRole] || 1;
-
-        // Check if user's role level is sufficient for all items
-        for (const item of itemsData || []) {
-          const itemRoleLevel = roleHierarchy[item.level] || 4;
-          if (userRoleLevel < itemRoleLevel) {
-            shouldAutoApprove = false;
-            break;
-          }
-        }
+      if (res.ok) {
+        console.log("Created request:", json.data || null);
+        return { req: json.data, error: null };
       }
 
-      const { data, error } = await supabase
-        .from("requests")
-        .insert({
-          user_id: userId,
-          status: shouldAutoApprove ? "approved" : "pending", // auto-approve if user level is sufficient
-          notes: request.notes || null,
-          due_date: request.due_date || null,
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error("[v0] Create request error:", error);
-      } else {
-        console.log(
-          "[v0] Request created successfully:",
-          data?.id,
-          "Auto-approved:",
-          shouldAutoApprove
-        );
+      let errMsg: string =
+        json.errors || json.message || "Requests Creation Failed";
+      if (Array.isArray(errMsg)) {
+        errMsg = errMsg.map((e: any) => e.msg).join(", ");
       }
-      return { request: data, error };
+      throw new ApiError(errMsg, res.status);
     } catch (error) {
-      console.error("[v0] Create request exception:", error);
-      return { request: null, error };
+      console.error("Requests service exception:", error);
+      return { req: null, error };
     }
   },
 
-  async addRequestItem(
-    requestId: string,
-    itemId: string,
-    quantity: number
-  ): Promise<{ item: RequestItem | null; error: any }> {
-    try {
-      const supabase = await createClient();
-      console.log(
-        "[v0] Adding request item - request:",
-        requestId,
-        "item:",
-        itemId,
-        "qty:",
-        quantity
-      );
-      const { data, error } = await supabase
-        .from("request_items")
-        .insert({
-          request_id: requestId,
-          item_id: itemId,
-          quantity,
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error("[v0] Add request item error:", error);
-      } else {
-        console.log("[v0] Request item added successfully");
-      }
-      return { item: data, error };
-    } catch (error) {
-      console.error("[v0] Add request item exception:", error);
-      return { item: null, error };
-    }
-  },
-
-  async getRequestItems(
-    requestId: string
-  ): Promise<{ items: RequestItem[]; error: any }> {
-    try {
-      const supabase = await createClient();
-      const { data, error } = await supabase
-        .from("request_items")
-        .select("*")
-        .eq("request_id", requestId);
-      return { items: data || [], error };
-    } catch (error) {
-      return { items: [], error };
-    }
-  },
-
-  async updateRequest(
+  async updateRequestStatus(
     id: string,
-    request: UpdateRequestRequest
-  ): Promise<{ request: Request | null; error: any }> {
+    status: string,
+    notes?: string
+  ): Promise<{ req: Request | null; error: any }> {
     try {
-      const supabase = await createClient();
-      const { data, error } = await supabase
-        .from("requests")
-        .update(request)
-        .eq("id", id)
-        .select()
-        .single();
-      return { request: data, error };
+      const token = await authService.getAccessToken();
+      const res = await fetch(`${API_URL}/requests/${id}/?status=${status}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const json = await res.json();
+
+      if (res.ok) {
+        console.log("Created request:", json.data || null);
+        return { req: json.data, error: null };
+      }
+
+      let errMsg: string =
+        json.errors || json.message || "Requests Status Update Failed";
+      if (Array.isArray(errMsg)) {
+        errMsg = errMsg.map((e: any) => e.msg).join(", ");
+      }
+      throw new ApiError(errMsg, res.status);
     } catch (error) {
-      return { request: null, error };
+      console.error("Requests service exception:", error);
+      return { req: null, error };
     }
   },
 
-  async deleteRequest(id: string): Promise<{ error: any }> {
+  async updateRequestItems(
+    id: string,
+    items: ItemReq[],
+    due_date?: Date
+  ): Promise<{ req: Request | null; error: any }> {
     try {
-      const supabase = await createClient();
-      const { error } = await supabase.from("requests").delete().eq("id", id);
-      return { error };
+      const token = await authService.getAccessToken();
+      const res = await fetch(`${API_URL}/requests/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ items, due_date }),
+      });
+
+      const json = await res.json();
+
+      if (res.ok) {
+        console.log("Updated guest request:", json.data || null);
+        return { req: json.data, error: null };
+      }
+
+      let errMsg: string =
+        json.errors || json.message || "Requests Items Update Failed";
+      if (Array.isArray(errMsg)) {
+        errMsg = errMsg.map((e: any) => e.msg).join(", ");
+      }
+      throw new ApiError(errMsg, res.status);
     } catch (error) {
-      return { error };
+      console.error("Requests update service exception:", error);
+      return { req: null, error };
     }
   },
 };
