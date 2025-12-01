@@ -1,261 +1,205 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useDebounce } from "@/hooks/use-debounce";
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { useQuery } from "@tanstack/react-query";
 import { ItemTable } from "@/components/inventory/item-table";
+import { ItemForm } from "@/components/inventory/item-form";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import type { Item, User } from "@/lib/types";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { Item } from "@/lib/types";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { RoleGate } from "@/components/auth/role-gate";
-import { Label } from "@/components/ui/label";
+import { Search, Filter, X } from "lucide-react";
+import { clientService } from "@/lib/services/client-service";
+import { ListSkeleton } from "@/components/inventory/list-skeleton";
 
-let ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 10;
 
 export default function InventoryPage() {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-
   const { user, isLoading: isUserLoading } = useCurrentUser();
 
-  const { data: items = [], isLoading: isItemsLoading } = useQuery({
-    queryKey: ["inventory-items"],
-    queryFn: async () => {
-      const res = await fetch("/api/items");
-      if (!res.ok) throw new Error("Failed to fetch items");
-      const data = await res.json();
-      return (data.items || []) as Item[];
-    },
+  // 1. Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(
+    undefined
+  );
+
+  // 1.5 Debounce the search
+  // This variable will only update 500ms AFTER you stop typing
+  const debouncedSearch = useDebounce(searchQuery, 500);
+
+  // 2. Query with Dependency on Page
+  const {
+    data: items_res,
+    isLoading: isItemsLoading,
+    isPlaceholderData,
+  } = useQuery({
+    queryKey: [
+      "inventory-items",
+      currentPage,
+      debouncedSearch,
+      selectedCategory,
+    ], // <--- Unique key per page per search per category
+    queryFn: () =>
+      clientService.getItems(
+        currentPage,
+        ITEMS_PER_PAGE,
+        debouncedSearch,
+        selectedCategory
+      ),
+    // Keep previous data visible while fetching next page (prevents layout jump)
+    placeholderData: (previousData) => previousData,
   });
 
-  // --- MUTATION: CREATE ITEM ---
-  // Replaces: The manual fetch in onSubmit
-  const createItemMutation = useMutation({
-    mutationFn: async (newItem: any) => {
-      const res = await fetch("/api/items", {
-        method: "POST",
-        body: JSON.stringify(newItem),
-      });
-      if (!res.ok) throw new Error("Failed to create item");
-      return res.json();
-    },
-    // THE MAGIC MOMENT:
-    onSuccess: () => {
-      // Tell React Query: "The list is old now. Go fetch it again."
-      // This automatically updates the table without us writing fetch logic again.
-      queryClient.invalidateQueries({ queryKey: ["inventory-items"] });
-      setShowForm(false);
-    },
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => clientService.getCategories(),
+    staleTime: 1000 * 60 * 30,
   });
 
-  const handleEdit = (item: Item) => {
-    router.push(`/inventory/${item.id}`);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, selectedCategory]);
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setSelectedCategory(undefined);
   };
 
-  // Client-side pagination logic (remains the same)
-  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedItems = items.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const items = items_res?.results || [];
+  const totalItems = items_res?.total || 0;
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
 
-  // Combined Loading State
-  if (isUserLoading || isItemsLoading || !user) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        Loading...
-      </div>
-    );
-  }
+  const handleEdit = (id: string) => {
+    router.push(`/inventory/${id}`);
+  };
+  const handleDelete = async (id: string) => {
+    return;
+  };
+
+  // if (isUserLoading || (isItemsLoading && !items_res)) {
+  //   return (
+  //     <div className="flex h-[50vh] items-center justify-center">
+  //       Loading...
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-start">
+      {/* HEADER */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
             Inventory
           </h1>
-
-          <p className="text-muted-foreground mt-2">
-            Items in your design studio
-          </p>
+          {!isItemsLoading && (
+            <p className="text-muted-foreground mt-1">
+              {totalItems} items available
+            </p>
+          )}
         </div>
         <RoleGate allowedRoles={["admin"]}>
-          <Button
-            className="cursor-pointer"
-            onClick={() => setShowForm(!showForm)}
-          >
-            {showForm ? "View Inventory" : "Add Item"}
+          <Button onClick={() => setShowForm(!showForm)}>
+            {showForm ? "Hide Form" : "Add Item"}
           </Button>
         </RoleGate>
       </div>
 
+      {/* FILTER BAR */}
+      <div className="flex flex-col sm:flex-row gap-4 items-center bg-card p-4 rounded-lg border border-border">
+        {/* Search */}
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search items..."
+            className="pl-8"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+
+        {/* Category Filter */}
+        <div className="w-full sm:w-48">
+          <Select
+            value={selectedCategory}
+            onValueChange={(val) =>
+              setSelectedCategory(val === "all" ? undefined : val)
+            }
+          >
+            <SelectTrigger>
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder="Category" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map((cat: string) => (
+                <SelectItem key={cat} value={cat}>
+                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Clear Filters Button */}
+        {(searchQuery || selectedCategory) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearFilters}
+            className="h-10 px-3 text-muted-foreground"
+          >
+            <X className="mr-2 h-4 w-4" />
+            Reset
+          </Button>
+        )}
+      </div>
+
+      {/* CREATE FORM */}
       {showForm && (
         <RoleGate allowedRoles={["admin"]}>
-          <Card>
-            <CardHeader>
-              <CardTitle>Create New Item</CardTitle>
-              <CardDescription>
-                Add a new item to your inventory
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form
-                className="space-y-6"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const formData = new FormData(e.currentTarget);
-                  const rawData = Object.fromEntries(formData);
-
-                  // Trigger the mutation
-                  createItemMutation.mutate(rawData);
-                }}
-              >
-                {/* Inputs remain the same... */}
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Name</label>
-                    <input
-                      type="text"
-                      name="name"
-                      placeholder="Item name"
-                      required
-                      className="w-full px-3 py-2 border border-border rounded-lg"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Category</label>
-                    <input
-                      type="text"
-                      name="category"
-                      placeholder="Category"
-                      className="w-full px-3 py-2 border border-border rounded-lg"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Description</label>
-                  <input
-                    type="text"
-                    name="description"
-                    placeholder="Description"
-                    className="w-full px-3 py-2 border border-border rounded-lg"
-                  />
-                </div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Location</label>
-                    <input
-                      type="text"
-                      name="location"
-                      placeholder="Location"
-                      className="w-full px-3 py-2 border border-border rounded-lg"
-                    />
-                  </div>
-                  <Label htmlFor="role">Role</Label>
-                  <div className="relative"></div>
-                  <select
-                    id="level"
-                    name="level"
-                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none"
-                  >
-                    <option value="guest">Guest</option>
-                    <option value="intern">Intern</option>
-                    <option value="staff">Staff</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
-                <div className="grid gap-4 md:grid-cols-4">
-                  <div className="space-y-2">
-                    <label className="text-xs text-muted-foreground">
-                      Available
-                    </label>
-                    <input
-                      type="number"
-                      name="available"
-                      defaultValue="0"
-                      min="0"
-                      className="w-full px-3 py-2 border border-border rounded-lg"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs text-muted-foreground">
-                      In Use
-                    </label>
-                    <input
-                      type="number"
-                      name="in_use"
-                      defaultValue="0"
-                      min="0"
-                      className="w-full px-3 py-2 border border-border rounded-lg"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs text-muted-foreground">
-                      Damaged
-                    </label>
-                    <input
-                      type="number"
-                      name="damaged"
-                      defaultValue="0"
-                      min="0"
-                      className="w-full px-3 py-2 border border-border rounded-lg"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs text-muted-foreground">
-                      Total
-                    </label>
-                    <input
-                      type="number"
-                      name="in_use"
-                      defaultValue="0"
-                      min="0"
-                      className="w-full px-3 py-2 border border-border rounded-lg"
-                    />
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={createItemMutation.isPending} // Disable button while saving
-                >
-                  {createItemMutation.isPending ? "Creating..." : "Create Item"}
-                </Button>
-
-                {/* Show error if mutation fails */}
-                {createItemMutation.isError && (
-                  <p className="text-red-500 text-sm">
-                    Failed to create item. Try again.
-                  </p>
-                )}
-              </form>
-            </CardContent>
-          </Card>
+          <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-300">
+            <ItemForm onSuccess={() => setShowForm(false)} />
+          </div>
         </RoleGate>
       )}
 
-      <ItemTable
-        items={paginatedItems}
-        isAdmin={user.role === "admin"}
-        onEdit={user.role === "admin" ? handleEdit : undefined}
-      />
+      {/* TABLE */}
+      <div className="relative">
+        {isItemsLoading && !items.length ? (
+          <ListSkeleton />
+        ) : (
+          <ItemTable
+            items={items}
+            isAdmin={user?.role === "admin"}
+            onEdit={user?.role === "admin" ? handleEdit : undefined}
+          />
+        )}
+      </div>
 
+      {/* PAGINATION CONTROLS */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2">
           <Button
             variant="outline"
+            className="cursor-pointer"
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
+            disabled={currentPage === 1 || isItemsLoading}
           >
             Previous
           </Button>
@@ -264,8 +208,13 @@ export default function InventoryPage() {
           </span>
           <Button
             variant="outline"
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
+            className="cursor-pointer"
+            onClick={() => {
+              if (!isPlaceholderData && currentPage < totalPages) {
+                setCurrentPage((p) => p + 1);
+              }
+            }}
+            disabled={currentPage === totalPages || isItemsLoading}
           >
             Next
           </Button>

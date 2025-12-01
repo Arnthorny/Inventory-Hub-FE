@@ -1,17 +1,23 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import Link from "next/link"
-import { useSignup } from "@/hooks/use-signup"
-import type { SignupFormData } from "@/lib/types"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import type React from "react";
+import { useState } from "react";
+import Link from "next/link";
+import { useSignup } from "@/hooks/use-signup";
+import type { SignupFormData } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function SignUpPage() {
-  const { signup, isLoading, error } = useSignup()
+  const { signup, isLoading, error } = useSignup();
 
   // Form State
   const [formData, setFormData] = useState<SignupFormData>({
@@ -22,29 +28,34 @@ export default function SignUpPage() {
     role: "intern", // Default role
     password: "",
     confirm_password: "",
-  })
+  });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    await signup(formData)
-  }
+    e.preventDefault();
+    await signup(formData);
+  };
 
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10 bg-background">
-      <div className="w-full max-w-md"> {/* Increased width for 2 columns */}
+      <div className="w-full max-w-md">
+        {" "}
+        {/* Increased width for 2 columns */}
         <Card className="border border-border">
           <CardHeader className="space-y-2">
             <CardTitle className="text-2xl font-bold">Sign up</CardTitle>
-            <CardDescription>Create a new account to get started</CardDescription>
+            <CardDescription>
+              Create a new account to get started
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              
               {/* Row 1: Names */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -118,6 +129,7 @@ export default function SignUpPage() {
                     <option value="staff">Staff</option>
                     <option value="admin">Admin</option>
                   </select>
+
                   {/* Chevron Icon for style */}
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
                     <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
@@ -168,7 +180,10 @@ export default function SignUpPage() {
 
             <div className="mt-4 text-center text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link href="/auth/login" className="font-medium text-primary hover:underline">
+              <Link
+                href="/auth/login"
+                className="font-medium text-primary hover:underline"
+              >
                 Login
               </Link>
             </div>
@@ -176,5 +191,5 @@ export default function SignUpPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

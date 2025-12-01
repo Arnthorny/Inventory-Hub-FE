@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { User } from "@/lib/types";
 import { useLogout } from "@/hooks/use-logout";
+import { RequestCartToggle } from "./requests/request-cart-toggle";
+import { MobileSidebar } from "./sidebar";
 
 interface NavbarProps {
   user: User | null;
@@ -22,6 +24,8 @@ export function Navbar({ user }: NavbarProps) {
   return (
     <nav className="border-b border-border bg-card">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+        <MobileSidebar user={user} />
+
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
             <span className="text-primary-foreground font-bold text-sm">
@@ -34,7 +38,10 @@ export function Navbar({ user }: NavbarProps) {
         {user && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2 bg-transparent cursor-pointer">
+              <Button
+                variant="outline"
+                className="gap-2 bg-transparent cursor-pointer"
+              >
                 <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
                   <span className="text-xs font-semibold text-muted-foreground">
                     {user.email.charAt(0).toUpperCase()}
@@ -60,6 +67,7 @@ export function Navbar({ user }: NavbarProps) {
           </DropdownMenu>
         )}
       </div>
+      <RequestCartToggle />
     </nav>
   );
 }
