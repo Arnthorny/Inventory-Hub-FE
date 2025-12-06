@@ -1,14 +1,16 @@
 import { ApiError } from "@/lib/errors";
-import type {
-  InventoryItemAnalysis, TaskData
-} from "@/lib/types";
+import type { InventoryItemAnalysis, TaskData } from "@/lib/types";
 import { URL } from "node:url";
 import { authService } from "./auth-service";
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:7001/api/v1";
+const API_URL = process.env.BACKEND_API_URL || "http://127.0.0.1:7001/api/v1";
 
 export const tasksService = {
-  async getTaskInfo(task_id: string): Promise<{ item_data: TaskData<InventoryItemAnalysis> | null; error: any }> {
+  async getTaskInfo(
+    task_id: string
+  ): Promise<{
+    item_data: TaskData<InventoryItemAnalysis> | null;
+    error: any;
+  }> {
     const token = await authService.getAccessToken();
     const url = new URL(`${API_URL}/tasks/${task_id}/status`);
 
@@ -24,7 +26,7 @@ export const tasksService = {
       const json = await res.json();
 
       if (res.ok) {
-        console.log("Fetched task info: ", json?.data || {})
+        console.log("Fetched task info: ", json?.data || {});
         return { item_data: json.data || [], error: null };
       }
 

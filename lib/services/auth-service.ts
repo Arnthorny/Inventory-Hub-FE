@@ -10,10 +10,9 @@ import type {
 } from "@/lib/types";
 import { ApiError } from "@/lib/errors";
 import { cookies, headers } from "next/headers";
-import { cache } from "react"
+import { cache } from "react";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:7001/api/v1";
+const API_URL = process.env.BACKEND_API_URL || "http://127.0.0.1:7001/api/v1";
 
 export const authService = {
   async login(credentials: LoginFormData): Promise<LoginResponse> {
@@ -78,7 +77,7 @@ export const authService = {
     return headersList.get("x-access-token") || undefined;
   },
 
-  getUser: cache (async (): Promise<User> => {
+  getUser: cache(async (): Promise<User> => {
     const token = await authService.getAccessToken();
 
     const res = await fetch(`${API_URL}/users/me`, {
@@ -131,7 +130,7 @@ export const authService = {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({email})
+      body: JSON.stringify({ email }),
     });
 
     const data = await res.json();
@@ -151,7 +150,7 @@ export const authService = {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     });
 
     const data = await res.json();

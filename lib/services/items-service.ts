@@ -7,8 +7,7 @@ import type {
 } from "@/lib/types";
 import { URL, URLSearchParams } from "node:url";
 import { authService } from "./auth-service";
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:7001/api/v1";
+const API_URL = process.env.BACKEND_API_URL || "http://127.0.0.1:7001/api/v1";
 
 export const itemsService = {
   async getItems(

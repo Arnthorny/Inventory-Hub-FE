@@ -2,8 +2,7 @@ import type { PaginatedListBase, User } from "@/lib/types";
 import { ApiError } from "@/lib/errors";
 import { authService } from "./auth-service";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:7001/api/v1";
+const API_URL = process.env.BACKEND_API_URL || "http://127.0.0.1:7001/api/v1";
 
 export const usersService = {
   async getUsers(
