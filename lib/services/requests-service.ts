@@ -6,6 +6,7 @@ import type {
   ItemReq,
 } from "@/lib/types";
 import { authService } from "@/lib/services/auth-service";
+import fetcher from "../utils";
 
 const API_URL = process.env.BACKEND_API_URL || "http://127.0.0.1:7001/api/v1";
 
@@ -32,7 +33,7 @@ export const requestsService = {
     if (guest_id) sParams["guest_id"] = guest_id;
     if (user_id) sParams["user_id"] = user_id;
     url.search = new URLSearchParams(sParams).toString();
-    const res = await fetch(url, {
+    const res = await fetcher(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -60,7 +61,7 @@ export const requestsService = {
   async getReqById(id: string): Promise<{ req: Request | null; error: any }> {
     const token = await authService.getAccessToken();
     try {
-      const res = await fetch(`${API_URL}/requests/${id}`, {
+      const res = await fetcher(`${API_URL}/requests/${id}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -100,7 +101,7 @@ export const requestsService = {
         const token = await authService.getAccessToken();
         headers["Authorization"] = `Bearer ${token}`;
       }
-      const res = await fetch(`${API_URL}/requests`, {
+      const res = await fetcher(`${API_URL}/requests`, {
         method: "POST",
         headers,
         body: JSON.stringify(body),
@@ -132,7 +133,7 @@ export const requestsService = {
   ): Promise<{ req: Request | null; error: any }> {
     try {
       const token = await authService.getAccessToken();
-      const res = await fetch(`${API_URL}/requests/${id}/?status=${status}`, {
+      const res = await fetcher(`${API_URL}/requests/${id}/?status=${status}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -166,7 +167,7 @@ export const requestsService = {
   ): Promise<{ req: Request | null; error: any }> {
     try {
       const token = await authService.getAccessToken();
-      const res = await fetch(`${API_URL}/requests/${id}`, {
+      const res = await fetcher(`${API_URL}/requests/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

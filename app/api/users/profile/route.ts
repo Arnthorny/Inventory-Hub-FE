@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { authService } from "@/lib/services/auth-service";
 import { ApiError } from "@/lib/errors";
+import fetcher from "@/lib/utils";
 
 const API_URL = process.env.BACKEND_API_URL || "http://127.0.0.1:7001";
 
@@ -12,7 +13,7 @@ export async function GET() {
   }
 
   try {
-    const res = await fetch(`${API_URL}/users/me`, {
+    const res = await fetcher(`${API_URL}/users/me`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

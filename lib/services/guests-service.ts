@@ -1,12 +1,13 @@
 import type { CreateRequestBody, Guest } from "@/lib/types";
 import { ApiError } from "@/lib/errors";
+import fetcher from "../utils";
 
 const API_URL = process.env.BACKEND_API_URL || "http://127.0.0.1:7001/api/v1";
 
 export const guestService = {
   async getGuestById(id: string): Promise<{ guest: Guest | null; error: any }> {
     try {
-      const res = await fetch(`${API_URL}/guests/${id}`, {
+      const res = await fetcher(`${API_URL}/guests/${id}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -51,7 +52,7 @@ export const guestService = {
       phone,
       email,
     };
-    const res = await fetch("/api/guests/requests", {
+    const res = await fetcher("/api/guests/requests", {
       method: "POST",
       body: JSON.stringify(body),
     });

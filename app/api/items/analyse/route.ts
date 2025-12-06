@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { authService } from "@/lib/services/auth-service";
 import { ApiError } from "@/lib/errors";
+import fetcher from "@/lib/utils";
 
 const API_URL = process.env.BACKEND_API_URL || "http://127.0.0.1:7001/api/v1";
 
@@ -9,7 +10,7 @@ export async function POST(request: Request) {
     const body = await request.formData();
     const token = await authService.getAccessToken();
 
-    const res = await fetch(`${API_URL}/items/analyse`, {
+    const res = await fetcher(`${API_URL}/items/analyse`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

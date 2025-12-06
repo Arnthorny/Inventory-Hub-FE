@@ -2,6 +2,7 @@ import { ApiError } from "@/lib/errors";
 import type { InventoryItemAnalysis, TaskData } from "@/lib/types";
 import { URL } from "node:url";
 import { authService } from "./auth-service";
+import fetcher from "../utils";
 const API_URL = process.env.BACKEND_API_URL || "http://127.0.0.1:7001/api/v1";
 
 export const tasksService = {
@@ -15,7 +16,7 @@ export const tasksService = {
     const url = new URL(`${API_URL}/tasks/${task_id}/status`);
 
     try {
-      const res = await fetch(url, {
+      const res = await fetcher(url, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

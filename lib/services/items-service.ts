@@ -7,6 +7,7 @@ import type {
 } from "@/lib/types";
 import { URL, URLSearchParams } from "node:url";
 import { authService } from "./auth-service";
+import fetcher from "../utils";
 const API_URL = process.env.BACKEND_API_URL || "http://127.0.0.1:7001/api/v1";
 
 export const itemsService = {
@@ -30,7 +31,7 @@ export const itemsService = {
     url.search = new URLSearchParams(sParams).toString();
 
     try {
-      const res = await fetch(url, {
+      const res = await fetcher(url, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -61,7 +62,7 @@ export const itemsService = {
   async getItemById(id: string): Promise<{ item: Item | null; error: any }> {
     const token = await authService.getAccessToken();
     try {
-      const res = await fetch(`${API_URL}/items/${id}`, {
+      const res = await fetcher(`${API_URL}/items/${id}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -93,7 +94,7 @@ export const itemsService = {
   ): Promise<{ item: Item | null; error: any }> {
     try {
       const token = await authService.getAccessToken();
-      const res = await fetch(`${API_URL}/items`, {
+      const res = await fetcher(`${API_URL}/items`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -127,7 +128,7 @@ export const itemsService = {
   ): Promise<{ item: Item | null; error: any }> {
     try {
       const token = await authService.getAccessToken();
-      const res = await fetch(`${API_URL}/items/${id}`, {
+      const res = await fetcher(`${API_URL}/items/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -160,7 +161,7 @@ export const itemsService = {
     const url = new URL(`${API_URL}/items/categories`);
 
     try {
-      const res = await fetch(url, {
+      const res = await fetcher(url, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

@@ -11,12 +11,13 @@ import type {
 import { ApiError } from "@/lib/errors";
 import { cookies, headers } from "next/headers";
 import { cache } from "react";
+import fetcher from "../utils";
 
 const API_URL = process.env.BACKEND_API_URL || "http://127.0.0.1:7001/api/v1";
 
 export const authService = {
   async login(credentials: LoginFormData): Promise<LoginResponse> {
-    const res = await fetch(`${API_URL}/auth/login`, {
+    const res = await fetcher(`${API_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(credentials),
@@ -34,7 +35,7 @@ export const authService = {
   },
 
   async signUp(body: SignupFormData): Promise<ApiResponse<User>> {
-    const res = await fetch(`${API_URL}/auth/register`, {
+    const res = await fetcher(`${API_URL}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
@@ -52,7 +53,7 @@ export const authService = {
   },
 
   async refreshTokens(token: string): Promise<SignInTokensRes> {
-    const res = await fetch(`${API_URL}/auth/tokens/refresh`, {
+    const res = await fetcher(`${API_URL}/auth/tokens/refresh`, {
       method: "POST",
       headers: { "x-refresh-token": token },
     });
@@ -80,7 +81,7 @@ export const authService = {
   getUser: cache(async (): Promise<User> => {
     const token = await authService.getAccessToken();
 
-    const res = await fetch(`${API_URL}/users/me`, {
+    const res = await fetcher(`${API_URL}/users/me`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -105,7 +106,7 @@ export const authService = {
 
   async logout(): Promise<ApiResponseBase> {
     const token = await this.getAccessToken();
-    const res = await fetch(`${API_URL}/auth/logout`, {
+    const res = await fetcher(`${API_URL}/auth/logout`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -125,7 +126,7 @@ export const authService = {
   },
 
   async forgotPassword(email: string): Promise<ApiResponseBase> {
-    const res = await fetch(`${API_URL}/auth/passwords/reset`, {
+    const res = await fetcher(`${API_URL}/auth/passwords/reset`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -145,7 +146,7 @@ export const authService = {
   },
 
   async resetPassword(body: ResetPasswordBody): Promise<ApiResponseBase> {
-    const res = await fetch(`${API_URL}/auth/passwords/set-new`, {
+    const res = await fetcher(`${API_URL}/auth/passwords/set-new`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
