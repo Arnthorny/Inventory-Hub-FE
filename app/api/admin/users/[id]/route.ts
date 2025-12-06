@@ -1,73 +1,45 @@
-import { createClient } from "@/lib/supabase/server";
+import { ApiError } from "@/lib/errors";
 import { usersService } from "@/lib/services/users-service";
+// import { useSearchParams } from "next/navigation";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check if user is admin
-    const { user: adminUser } = await usersService.getUser(user.id);
-    if (adminUser?.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    const body = await request.json();
-    const { user: updatedUser, error } = await usersService.updateUser(
-      params.id,
-      body.role
-    );
-
-    if (error) throw error;
-
-    return NextResponse.json({ user: updatedUser });
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to update user" },
-      { status: 500 }
-    );
+  {
+    params,
+  }: {
+    params: Promise<{
+      id: string;
+    }>;
   }
-}
-
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
 ) {
+
+
+  const { searchParams } = request.nextUrl;
+
+  const is_active = searchParams.get("is_active") || undefined;
+  const is_deleted = searchParams.get("is_deleted") || undefined;
+  const role = searchParams.get("role");
+
+  const { id } = await params;
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Check if user is admin
-    const { user: adminUser } = await usersService.getUser(user.id);
-    if (adminUser?.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    const { error } = await usersService.deleteUser(params.id);
+    const { user, error } = await usersService.updateUser(
+      id,
+      is_deleted,
+      is_active,
+      role || undefined
+    );
 
     if (error) throw error;
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json(user);
   } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to delete user" },
-      { status: 500 }
-    );
+    console.error("[PATCH] user route error:", error);
+    if (error instanceof ApiError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status }
+      );
+    }
+    return NextResponse.json({ error: "Internal Error" }, { status: 500 });
   }
 }

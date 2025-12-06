@@ -6,7 +6,12 @@ export async function updateSession(request: NextRequest) {
   const refreshToken = request.cookies.get("refresh_token")?.value;
   const path = request.nextUrl.pathname;
 
+  const isAdminPath = path.startsWith("/admin") || path.startsWith("/api/admin");
+
   if (accessToken) {
+    const user = await authService.getUser();
+    if (isAdminPath && user.role !== "admin")
+      return NextResponse.redirect(new URL("/forbidden", request.url));
     return NextResponse.next();
   }
 
@@ -53,10 +58,10 @@ export async function updateSession(request: NextRequest) {
     path === "/" ||
     path.startsWith("/auth") ||
     path.startsWith("/api/auth") ||
-    path.startsWith("/guest");
+    path.startsWith("/guests") ||
+    path.startsWith("/api/guests");
 
   if (!refreshToken && !isPublicPath) {
-    console.log('Here')
     return NextResponse.redirect(new URL("/auth/login", request.url));
   }
 

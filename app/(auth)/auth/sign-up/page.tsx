@@ -43,10 +43,9 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10 bg-background">
+
       <div className="w-full max-w-md">
         {" "}
-        {/* Increased width for 2 columns */}
         <Card className="border border-border">
           <CardHeader className="space-y-2">
             <CardTitle className="text-2xl font-bold">Sign up</CardTitle>
@@ -173,7 +172,7 @@ export default function SignUpPage() {
                 </div>
               )}
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full cursor-pointer" disabled={isLoading}>
                 {isLoading ? "Creating account..." : "Sign up"}
               </Button>
             </form>
@@ -190,6 +189,5 @@ export default function SignUpPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
   );
 }

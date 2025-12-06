@@ -8,6 +8,7 @@ export interface User {
   first_name: string;
   last_name: string;
   phone: string;
+  is_active: Boolean;
 
   created_at: Date;
   updated_at: Date;
@@ -45,7 +46,7 @@ export interface Request {
   reason: string;
   status: RequestStatusUnion;
   notes: string | null;
-  due_date: Date;
+  due_date?: Date;
   created_at: Date;
   items?: Item[];
   updated_at?: Date;
@@ -65,9 +66,14 @@ export interface CreateRequestItem extends Item {
 export interface Guest {
   id: string;
   email: string;
-  name: string | null;
-  created_at: string;
-  expires_at: string | null;
+  phone: string;
+
+  first_name: string;
+  last_name: string;
+  created_at: Date;
+  is_active: boolean;
+
+  requests: Request[];
 }
 
 export interface EmailLog {
@@ -129,6 +135,7 @@ export interface ItemReq {
 
 export interface CreateUserRequest {
   type: "user";
+  target_user_id?: string;
   reason?: string;
   items: ItemReq[];
   due_date?: Date;
@@ -210,4 +217,25 @@ export interface UpdateRequestRequest {
 
 export interface UpdateRequestItemRequest {
   returned_quantity?: number;
+}
+
+export interface ResetPasswordBody {
+  token: string;
+  new_password: string;
+  confirm_new_password: string;
+}
+
+export interface InventoryItemAnalysis {
+  name: string;
+  description: string;
+  category: string;
+  level: "guest" | "intern" | "staff" | "admin";
+  available: number;
+}
+
+export interface TaskData<T> {
+  task_id: string;
+  status: 'SUCCESS' | 'PENDING' | 'FAILURE' | 'RETRY' | 'STARTED';
+  result: T;
+  info: Record<string, string>;
 }

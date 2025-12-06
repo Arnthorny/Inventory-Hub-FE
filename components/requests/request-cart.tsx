@@ -1,7 +1,7 @@
 "use client";
 import type { CreateRequestBody } from "@/lib/types";
 import { useRequestStore } from "@/hooks/use-request-store";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Sheet,
   SheetContent,
@@ -19,13 +19,18 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import { clientService } from "@/lib/services/client-service";
+import { RoleGate } from "../auth/role-gate";
+import { UserSearch } from "../users/user-search";
 
 export function RequestCart() {
   const { items, removeItem, updateQuantity, isOpen, toggleCart, clearCart } =
     useRequestStore();
-  const { user, isLoading } = useCurrentUser();
+  const { user, isLoading: isUserLoading } = useCurrentUser();
 
   const [reason, setReason] = useState("");
+  const [proxyUserId, setProxyUserId] = useState<undefined | string>(undefined);
+
+  const queryClient = useQueryClient();
   const today = new Date();
   const tomorrow = new Date(today.setDate(today.getDate() + 1))
     .toISOString()
@@ -34,10 +39,17 @@ export function RequestCart() {
 
   const submitMutation = useMutation({
     mutationFn: async () =>
-      await clientService.submitRequest(user, dueDate, items, reason),
+      await clientService.submitRequest(
+        user,
+        proxyUserId,
+        dueDate,
+        items,
+        reason
+      ),
     onSuccess: () => {
       toast.success("Request Submitted");
       clearCart();
+      queryClient.invalidateQueries({ queryKey: ["inventory-items"] });
       setReason("");
       setDueDate("");
       toggleCart();
@@ -67,6 +79,21 @@ export function RequestCart() {
             </div>
           ) : (
             <div className="space-y-6">
+              <RoleGate allowedRoles={["admin"]}>
+                <div className="space-y-2 p-3 bg-muted/50 rounded-md border">
+                  <Label>Requesting On Behalf Of (Optional)</Label>
+
+                  <UserSearch
+                    selectedUserId={proxyUserId}
+                    onSelect={setProxyUserId}
+                  />
+
+                  <p className="text-[10px] text-muted-foreground">
+                    Leave empty to request for yourself.
+                  </p>
+                </div>
+              </RoleGate>
+
               {items.map((item) => (
                 <div key={item.id} className="flex gap-4 items-start">
                   {/* Item Details */}

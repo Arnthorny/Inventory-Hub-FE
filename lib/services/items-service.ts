@@ -154,4 +154,38 @@ export const itemsService = {
       return { item: null, error };
     }
   },
+
+  async getCategories(): Promise<{ categories: string[] | null; error: any }> {
+    const token = await authService.getAccessToken();
+
+    const url = new URL(`${API_URL}/items/categories`);
+
+    try {
+      const res = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const json = await res.json();
+
+      if (res.ok) {
+        console.log("Fetched categories count: ", json?.data?.length || []);
+        return { categories: json.data || [], error: null };
+      }
+
+      let errMsg: string =
+        json.errors || json.message || "Categories Retrieval Failed";
+      if (Array.isArray(errMsg)) {
+        errMsg = errMsg.map((e: any) => e.msg).join(", ");
+      }
+
+      throw new ApiError(errMsg, res.status);
+    } catch (error) {
+      console.error("Items service exception:", error);
+      return { categories: null, error };
+    }
+  },
 };

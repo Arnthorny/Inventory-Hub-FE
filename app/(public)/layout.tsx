@@ -1,23 +1,15 @@
-import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 import Link from "next/link";
 
-export default async function AuthLayout({
+export default function PublicLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const cookieStore = await cookies();
-
-  if (cookieStore.get("refresh_token")) {
-    redirect("/dashboard");
-  }
-
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <nav className="border-b border-border bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
-        <Link href="/auth/login">
+          <Link href="/auth/login">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <span className="text-primary-foreground font-bold text-sm">
@@ -31,9 +23,7 @@ export default async function AuthLayout({
           </Link>
         </div>
       </nav>
-      <div className="flex min-h-svh w-full items-start justify-center p-6 md:p-10 bg-background">
-        {children}
-      </div>
+      <main className="flex-1 p-6 md:p-10">{children}</main>
     </div>
   );
 }

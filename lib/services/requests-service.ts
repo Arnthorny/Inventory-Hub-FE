@@ -27,7 +27,6 @@ export const requestsService = {
       fields: "all",
       limit: String(limit),
     };
-    console.log(statusFilter);
 
     if (statusFilter) sParams["status"] = statusFilter;
     if (roleFilter) sParams["role"] = roleFilter;
@@ -90,17 +89,21 @@ export const requestsService = {
   },
 
   async createRequest(
-    body: CreateRequestBody
+    body: CreateRequestBody,
+    type: string
   ): Promise<{ req: Request | null; error: any }> {
     try {
-      console.log(body);
-      const token = await authService.getAccessToken();
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      if (type != "guest") {
+        const token = await authService.getAccessToken();
+        headers["Authorization"] = `Bearer ${token}`;
+      }
       const res = await fetch(`${API_URL}/requests`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers,
         body: JSON.stringify(body),
       });
 

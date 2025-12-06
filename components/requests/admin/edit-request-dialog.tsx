@@ -45,6 +45,7 @@ import { Item } from "@/lib/types";
 interface EditRequestDialogProps {
   requestId: string;
   guestReason: string;
+  givenDueDate?: Date;
   open: boolean;
   onClose: () => void;
 }
@@ -57,6 +58,7 @@ interface SelectedItem {
 export function EditRequestDialog({
   requestId,
   guestReason,
+  givenDueDate,
   open,
   onClose,
 }: EditRequestDialogProps) {
@@ -64,7 +66,7 @@ export function EditRequestDialog({
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
   const today = new Date();
   const tomorrow = new Date(today.setDate(today.getDate() + 1));
-  const [dueDate, setDueDate] = useState<Date | undefined>(tomorrow);
+  const [dueDate, setDueDate] = useState<Date | undefined>(givenDueDate || tomorrow);
 
   const [openCombobox, setOpenCombobox] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");

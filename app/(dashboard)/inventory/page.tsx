@@ -89,13 +89,6 @@ export default function InventoryPage() {
     return;
   };
 
-  // if (isUserLoading || (isItemsLoading && !items_res)) {
-  //   return (
-  //     <div className="flex h-[50vh] items-center justify-center">
-  //       Loading...
-  //     </div>
-  //   );
-  // }
 
   return (
     <div className="space-y-8">
@@ -112,7 +105,7 @@ export default function InventoryPage() {
           )}
         </div>
         <RoleGate allowedRoles={["admin"]}>
-          <Button onClick={() => setShowForm(!showForm)}>
+          <Button className="cursor-pointer" onClick={() => setShowForm(!showForm)}>
             {showForm ? "Hide Form" : "Add Item"}
           </Button>
         </RoleGate>

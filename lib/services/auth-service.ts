@@ -6,6 +6,7 @@ import type {
   User,
   LoginResponse,
   ApiResponseBase,
+  ResetPasswordBody,
 } from "@/lib/types";
 import { ApiError } from "@/lib/errors";
 import { cookies, headers } from "next/headers";
@@ -118,6 +119,46 @@ export const authService = {
     if (res.ok) return data;
 
     let errMsg = data.errors || data.message || "Signup Failed";
+    if (Array.isArray(errMsg)) {
+      errMsg = errMsg.map((e: any) => e.msg).join(", ");
+    }
+    throw new ApiError(errMsg, res.status);
+  },
+
+  async forgotPassword(email: string): Promise<ApiResponseBase> {
+    const res = await fetch(`${API_URL}/auth/passwords/reset`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({email})
+    });
+
+    const data = await res.json();
+
+    if (res.ok) return data;
+
+    let errMsg = data.errors || data.message || "Forgot Password failed";
+    if (Array.isArray(errMsg)) {
+      errMsg = errMsg.map((e: any) => e.msg).join(", ");
+    }
+    throw new ApiError(errMsg, res.status);
+  },
+
+  async resetPassword(body: ResetPasswordBody): Promise<ApiResponseBase> {
+    const res = await fetch(`${API_URL}/auth/passwords/set-new`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body)
+    });
+
+    const data = await res.json();
+
+    if (res.ok) return data;
+
+    let errMsg = data.errors || data.message || "Reset Password failed";
     if (Array.isArray(errMsg)) {
       errMsg = errMsg.map((e: any) => e.msg).join(", ");
     }

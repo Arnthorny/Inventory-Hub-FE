@@ -3,7 +3,7 @@ import { z } from "zod"
 export const createItemSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   description: z.string(),
-  category: z.string().min(4, "Category is required"),
+  category: z.string().min(2, "Category is required"),
   level: z.enum(["guest", "intern", "staff", "admin"]),
   location: z.string(),
   available: z.coerce.number().min(0),

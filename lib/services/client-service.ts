@@ -57,33 +57,34 @@ export const clientService = {
   },
 
   async getCategories() {
-    const res = await fetch("/api/categories");
+    const res = await fetch("/api/items/categories");
     if (!res.ok) return ["general", "design", "prototyping", "electronics"];
-    return res.json();
+    const { categories } = await res.json();
+    return categories;
   },
 
   async submitRequest(
     user: User | undefined,
+    proxyUserId: string | undefined,
     dueDate: string,
     items: CreateRequestItem[],
     reason: string
   ) {
     let body: CreateRequestBody;
 
-    if (user?.role !== "admin") {
-      body = {
-        type: "user",
-        due_date: dueDate ? new Date(dueDate) : undefined,
-        items: items.map((i) => ({ item_id: i.id, quantity: i.quantity })),
-        reason: reason,
-      };
-      const res = await fetch("/api/requests", {
-        method: "POST",
-        body: JSON.stringify(body),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error);
-    }
+    body = {
+      type: "user",
+      target_user_id: proxyUserId,
+      due_date: dueDate ? new Date(dueDate) : undefined,
+      items: items.map((i) => ({ item_id: i.id, quantity: i.quantity })),
+      reason: reason,
+    };
+    const res = await fetch("/api/requests", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error);
   },
 
   async getClientRequests(
@@ -123,8 +124,10 @@ export const clientService = {
 
   async getClientRequestById(id: string) {
     const res = await fetch(`/api/requests/${id}`);
-    if (!res.ok) throw new Error("Failed to get request");
     const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.error);
+    }
     return json as Request;
   },
 
@@ -136,5 +139,27 @@ export const clientService = {
     if (!res.ok) throw new Error("Failed to update guest request");
     const { data } = await res.json();
     return data as Request;
+  },
+
+  async getUsers(
+    currentPage: number,
+    ITEMS_PER_PAGE: number,
+    debouncedSearch: string,
+    selectedStatus?: string //'all' | 'new' | 'active' | 'inactive'
+  ) {
+    const params = new URLSearchParams({
+      page: String(currentPage),
+      limit: String(ITEMS_PER_PAGE),
+    });
+
+    if (debouncedSearch) params.append("search", debouncedSearch);
+
+    if (selectedStatus && selectedStatus !== "all")
+      params.append("status", selectedStatus);
+
+    const res = await fetch(`/api/users?${params.toString()}`);
+    if (!res.ok) throw new Error("Failed to fetch users");
+    const { users_res } = await res.json();
+    return users_res as PaginatedListBase<User>;
   },
 };

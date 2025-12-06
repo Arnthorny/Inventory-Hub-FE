@@ -11,7 +11,7 @@ export async function GET(
     const { item, error } = await itemsService.getItemById(id);
 
     if (error) throw error;
-    return NextResponse.json(item);
+    return NextResponse.json({item});
   } catch (error) {
     console.error("[GET]Item route error:", error);
     if (error instanceof ApiError) {

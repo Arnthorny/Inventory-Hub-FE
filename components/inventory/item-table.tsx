@@ -49,7 +49,11 @@ export function ItemTable({
                 <TableHead className="text-right">Level</TableHead>
               </>
             )}
-            {<TableHead className="w-24">Actions</TableHead>}
+            {
+              <TableHead className="w-24 text-center" colSpan={isAdmin ? 2 : 1}>
+                Actions
+              </TableHead>
+            }
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -80,7 +84,9 @@ export function ItemTable({
                     </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {item.category || "-"}
+                    {`${item.category[0].toLocaleUpperCase()}${item.category.slice(
+                      1
+                    )}` || "-"}
                   </TableCell>
                   {isAdmin ? (
                     <>
@@ -110,7 +116,7 @@ export function ItemTable({
                       </TableCell>
                     </>
                   )}
-                  {isAdmin ? (
+                  {isAdmin && (
                     <TableCell>
                       <div className="flex gap-2">
                         {onEdit && (
@@ -135,32 +141,31 @@ export function ItemTable({
                         )}
                       </div>
                     </TableCell>
-                  ) : (
-                    <TableCell>
-                      <div className="flex gap-1">
-                        {isInCart ? (
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => removeItem(item.id)}
-                            className="cursor-pointer"
-                          >
-                            Remove
-                          </Button>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => addItem(item)}
-                            disabled={item.available < 1}
-                            className="cursor-pointer"
-                          >
-                            Request
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
                   )}
+                  <TableCell>
+                    <div className="flex gap-1">
+                      {isInCart ? (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => removeItem(item.id)}
+                          className="cursor-pointer"
+                        >
+                          Remove
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => addItem(item)}
+                          disabled={item.available < 1}
+                          className="cursor-pointer"
+                        >
+                          Request
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
                 </TableRow>
               );
             })

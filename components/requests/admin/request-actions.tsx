@@ -49,6 +49,7 @@ export function RequestActions({ request }: { request: Request }) {
             <EditRequestDialog
               requestId={request.id}
               guestReason={request.reason}
+              givenDueDate={request.due_date}
               open={showEdit}
               onClose={() => setShowEdit(false)}
             />

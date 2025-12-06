@@ -3,11 +3,10 @@
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Clock } from "lucide-react" // Assuming you have lucide-react installed
+import { Clock } from "lucide-react"
 
 export default function PendingPage() {
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10 bg-background">
       <Card className="w-full max-w-sm text-center border-border">
         <CardHeader className="flex flex-col items-center gap-4">
           <div className="p-3 bg-muted rounded-full">
@@ -29,6 +28,5 @@ export default function PendingPage() {
           </div>
         </CardContent>
       </Card>
-    </div>
   )
 }
