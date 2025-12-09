@@ -75,7 +75,9 @@ export function ItemTable({
                       <p className="font-medium">{item.name}</p>
                       {item.description && (
                         <p className="text-xs text-muted-foreground">
-                          {item.description}
+                          {item.description.length > 70
+                            ? `${item.description.slice(0, 70)}...`
+                            : item.description}
                         </p>
                       )}
                     </div>

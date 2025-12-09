@@ -123,7 +123,11 @@ export function ItemForm({ onSuccess, initialData }: ItemFormProps) {
 
   async function onAnalysis(res: InventoryItemAnalysis) {
     form.setValue("name", res.name);
-    form.setValue("level", res.level);
+    form.setValue("level", res.level, {
+      shouldValidate: true,
+      shouldDirty: true,
+      shouldTouch: true,
+    });
     form.setValue("category", res.category);
     form.setValue("description", res.description);
     form.setValue("available", res.available);
@@ -370,6 +374,7 @@ export function ItemForm({ onSuccess, initialData }: ItemFormProps) {
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
+                          value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
