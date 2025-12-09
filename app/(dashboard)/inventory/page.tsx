@@ -83,12 +83,11 @@ export default function InventoryPage() {
   const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
 
   const handleEdit = (id: string) => {
-    router.push(`/inventory/${id}`);
+    router.push(`/inventory/${id}/edit`);
   };
   const handleDelete = async (id: string) => {
     return;
   };
-
 
   return (
     <div className="space-y-8">
@@ -105,7 +104,10 @@ export default function InventoryPage() {
           )}
         </div>
         <RoleGate allowedRoles={["admin"]}>
-          <Button className="cursor-pointer" onClick={() => setShowForm(!showForm)}>
+          <Button
+            className="cursor-pointer"
+            onClick={() => setShowForm(!showForm)}
+          >
             {showForm ? "Hide Form" : "Add Item"}
           </Button>
         </RoleGate>

@@ -4,6 +4,7 @@ import type {
   CreateItemRequest,
   UpdateItemRequest,
   PaginatedListBase,
+  ApiResponseBase,
 } from "@/lib/types";
 import { URL, URLSearchParams } from "node:url";
 import { authService } from "./auth-service";
@@ -186,6 +187,37 @@ export const itemsService = {
     } catch (error) {
       console.error("Items service exception:", error);
       return { categories: null, error };
+    }
+  },
+
+  async deleteItem(
+    id: string
+  ): Promise<{ res: ApiResponseBase | null; error: any }> {
+    try {
+      const token = await authService.getAccessToken();
+      const res = await fetcher(`${API_URL}/items/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const json = await res.json();
+
+      if (res.ok) {
+        console.log("Deleted item:", json.data || null);
+        return { res: json, error: null };
+      }
+
+      let errMsg: string = json.errors || json.message || "Items delete Failed";
+      if (Array.isArray(errMsg)) {
+        errMsg = errMsg.map((e: any) => e.msg).join(", ");
+      }
+      throw new ApiError(errMsg, res.status);
+    } catch (error) {
+      console.error("Items service exception:", error);
+      return { res: null, error };
     }
   },
 };

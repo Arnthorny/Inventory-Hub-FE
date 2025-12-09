@@ -11,7 +11,7 @@ export async function GET(
     const { item, error } = await itemsService.getItemById(id);
 
     if (error) throw error;
-    return NextResponse.json({item});
+    return NextResponse.json(item);
   } catch (error) {
     console.error("[GET]Item route error:", error);
     if (error instanceof ApiError) {
@@ -34,9 +34,31 @@ export async function PATCH(
     const { item, error } = await itemsService.updateItem(id, body);
 
     if (error) throw error;
-    return NextResponse.json(item );
+    return NextResponse.json(item);
   } catch (error) {
     console.error("[PATCH] Item route error:", error);
+    if (error instanceof ApiError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status }
+      );
+    }
+    return NextResponse.json({ error: "Internal Error" }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  try {
+    const { res, error } = await itemsService.deleteItem(id);
+
+    if (error) throw error;
+    return NextResponse.json(res);
+  } catch (error) {
+    console.error("[Delete] Item route error:", error);
     if (error instanceof ApiError) {
       return NextResponse.json(
         { error: error.message },

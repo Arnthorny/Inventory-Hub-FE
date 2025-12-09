@@ -67,7 +67,7 @@ export function RequestActions({ request }: { request: Request }) {
     );
   }
 
-  if (request.status === "approved") {
+  if (request.status === "approved" || request.status == "overdue") {
     return (
       <Button
         variant="outline"

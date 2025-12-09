@@ -57,6 +57,7 @@ export interface Request {
   requester?: string;
   reviewer?: string;
   requester_role?: UserRole;
+  requester_email?: string;
 }
 
 export interface CreateRequestItem extends Item {
@@ -157,6 +158,8 @@ export type CreateRequestBody =
 export interface DashboardStats {
   total_items: number;
   total_units: number | null;
+  pending_users: number | null;
+  active_users: number | null;
   total_pending_requests: number;
   total_approved_requests: number;
 }

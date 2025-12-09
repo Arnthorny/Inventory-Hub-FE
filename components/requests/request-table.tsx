@@ -12,8 +12,10 @@ import { RequestStatusBadge } from "./request-status-badge";
 import { format } from "date-fns";
 import { Request } from "@/lib/types";
 import { User } from "lucide-react"; // <--- Import the generic icon
+import { useRouter } from "next/navigation";
 
 export function RequestTable({ requests }: { requests: Request[] }) {
+  const router = useRouter();
   return (
     <div className="rounded-md border">
       <Table>
@@ -28,12 +30,13 @@ export function RequestTable({ requests }: { requests: Request[] }) {
         </TableHeader>
         <TableBody>
           {requests.map((req) => (
-            <TableRow key={req.id} className="cursor-pointer hover:bg-muted/50">
+            <TableRow
+              key={req.id}
+              className="cursor-pointer hover:bg-muted/50 transition-colors"
+              onClick={() => router.push(`/requests/${req.id}`)}
+            >
               <TableCell>
-                <Link
-                  href={`/requests/${req.id}`}
-                  className="flex items-center gap-2"
-                >
+                <div className="flex items-center gap-2">
                   <Avatar className="h-9 w-9">
                     <AvatarImage src={undefined} alt={"nA"} />
                     <AvatarFallback className="bg-muted">
@@ -46,7 +49,7 @@ export function RequestTable({ requests }: { requests: Request[] }) {
                       {req.requester_role}
                     </span>
                   </div>
-                </Link>
+                </div>
               </TableCell>
               <TableCell>
                 {req.reason && req.reason.length > 20

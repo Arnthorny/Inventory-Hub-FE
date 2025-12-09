@@ -60,7 +60,11 @@ export function Navbar({ user }: NavbarProps) {
                 Role: {user.role}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout} disabled={isLoading}>
+              <DropdownMenuItem
+                onClick={logout}
+                disabled={isLoading}
+                className="cursor-pointer"
+              >
                 {isLoading ? "Logging out..." : "Logout"}
               </DropdownMenuItem>
             </DropdownMenuContent>

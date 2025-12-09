@@ -103,7 +103,7 @@ export function ItemForm({ onSuccess, initialData }: ItemFormProps) {
 
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to save item");
-      return json.item
+      return json.item;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["inventory-items"] });
@@ -133,7 +133,7 @@ export function ItemForm({ onSuccess, initialData }: ItemFormProps) {
       if (pollCountRef.current >= 10) {
         clearInterval(pollIdRef.current);
         pollCountRef.current = 0;
-        throw new Error("Polling timeout");
+        throw new Error("Task timeout");
       }
 
       let img_data: TaskData<InventoryItemAnalysis>;
@@ -188,7 +188,7 @@ export function ItemForm({ onSuccess, initialData }: ItemFormProps) {
       const json = await uploadRes.json();
       const { task_id } = json;
 
-      const id = setInterval(() => pollForResults(task_id), 2000);
+      const id = setInterval(() => pollForResults(task_id), 4000);
       pollIdRef.current = id;
     } catch (err) {
       setIsAnalyzing(false);
@@ -226,7 +226,6 @@ export function ItemForm({ onSuccess, initialData }: ItemFormProps) {
               className="hidden"
               ref={fileInputRef}
               onChange={handleImageSelect}
-              capture="environment"
             />
 
             {!imagePreview ? (
@@ -244,7 +243,7 @@ export function ItemForm({ onSuccess, initialData }: ItemFormProps) {
                 type="button"
                 variant="outline"
                 onClick={clearImage}
-                className="gap-2 text-destructive hover:text-destructive"
+                className="gap-2 text-destructive hover:text-destructive cursor-pointer"
               >
                 <X className="h-4 w-4" />
                 Remove Scan
@@ -458,7 +457,11 @@ export function ItemForm({ onSuccess, initialData }: ItemFormProps) {
               </div>
 
               <div className="flex justify-end gap-4">
-                <Button type="submit" disabled={mutation.isPending}>
+                <Button
+                  className="cursor-pointer"
+                  type="submit"
+                  disabled={mutation.isPending}
+                >
                   {mutation.isPending
                     ? "Saving..."
                     : isEditing

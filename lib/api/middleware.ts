@@ -6,13 +6,25 @@ export async function updateSession(request: NextRequest) {
   const refreshToken = request.cookies.get("refresh_token")?.value;
   const path = request.nextUrl.pathname;
 
-  const isAdminPath = path.startsWith("/admin") || path.startsWith("/api/admin");
+  const isAdminPath =
+    path.startsWith("/admin") || path.startsWith("/api/admin");
 
   if (accessToken) {
-    const user = await authService.getUser();
-    if (isAdminPath && user.role !== "admin")
-      return NextResponse.redirect(new URL("/forbidden", request.url));
-    return NextResponse.next();
+    try {
+      const user = await authService.getUser();
+      if (isAdminPath && user && user.role !== "admin")
+        return NextResponse.redirect(new URL("/forbidden", request.url));
+      return NextResponse.next();
+    } catch (err) {
+      console.error("[Middleware] Get user failed. Redirecting to login...");
+
+      const response = NextResponse.redirect(
+        new URL("/auth/login", request.url)
+      );
+      response.cookies.delete("access_token");
+      response.cookies.delete("refresh_token");
+      return response;
+    }
   }
 
   if (!accessToken && refreshToken) {
@@ -43,7 +55,7 @@ export async function updateSession(request: NextRequest) {
 
       return response;
     } catch (error) {
-      console.error("[Middleware] Refresh failed. Redirecting to login.");
+      console.error("[Middleware] Refresh failed. Redirecting to login...");
 
       const response = NextResponse.redirect(
         new URL("/auth/login", request.url)

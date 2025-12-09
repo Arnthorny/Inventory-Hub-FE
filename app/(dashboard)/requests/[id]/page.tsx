@@ -14,6 +14,7 @@ import { ChevronLeft, Calendar, User, Box, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { clientService } from "@/lib/services/client-service";
+import NotFound from "@/app/not-found/page";
 
 export default function RequestDetailsPage({
   params,
@@ -48,7 +49,7 @@ export default function RequestDetailsPage({
   }
 
   if (!request) {
-    return <div className="p-10 text-center">Request not found.</div>;
+    return NotFound();
   }
 
   return (
@@ -166,6 +167,9 @@ export default function RequestDetailsPage({
                     </AvatarFallback>
                   </Avatar>
                   <h3 className="text-lg font-bold">{request.requester}</h3>
+                  <p className="text-xs mb-1">
+                    {request.requester_email || "null"}
+                  </p>
                   <span className="inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
                     {request.requester_role}
                   </span>
