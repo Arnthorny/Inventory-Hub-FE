@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/select";
 import { CategoryItemSelect } from "./item-category-select";
 import { clientService } from "@/lib/services/client-service";
+import { Textarea } from "../ui/textarea";
 
 interface ItemFormProps {
   onSuccess: () => void;
@@ -336,7 +337,7 @@ export function ItemForm({ onSuccess, initialData }: ItemFormProps) {
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Input placeholder="Describe the item..." {...field} />
+                      <Textarea placeholder="Describe the item..." {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
