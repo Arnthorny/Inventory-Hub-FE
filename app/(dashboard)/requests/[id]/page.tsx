@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { clientService } from "@/lib/services/client-service";
 import NotFound from "@/app/not-found/page";
+import RequestDetailsSkeleton from "@/components/requests/request-details-skeleton";
 
 export default function RequestDetailsPage({
   params,
@@ -36,8 +37,7 @@ export default function RequestDetailsPage({
 
   const isAdmin = user?.role === "admin";
 
-  if (isLoading)
-    return <div className="p-10 text-center">Loading request...</div>;
+  if (isLoading) return <RequestDetailsSkeleton />;
 
   if (error) {
     return (
