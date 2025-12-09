@@ -132,18 +132,13 @@ export default function RequestDetailsPage({
                 <span className="text-muted-foreground">Requested</span>
                 <span>{format(new Date(request.created_at), "PPP")}</span>
               </div>
-              {request.due_date && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Due Date</span>
-                  <span>{format(new Date(request.due_date), "PPP")}</span>
-                </div>
-              )}
-              {request.returned_at && (
-                <div className="flex justify-between text-sm text-green-600">
-                  <span>Returned</span>
+
+              <div className="flex justify-between text-sm text-green-600">
+                <span>Returned</span>
+                {request.returned_at && (
                   <span>{format(new Date(request.returned_at), "PPP")}</span>
-                </div>
-              )}
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
