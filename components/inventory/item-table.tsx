@@ -138,7 +138,10 @@ export function ItemTable({
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={() => removeItem(item.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeItem(item.id);
+                          }}
                           className="cursor-pointer"
                         >
                           Remove
@@ -147,7 +150,10 @@ export function ItemTable({
                         <Button
                           size="sm"
                           variant="secondary"
-                          onClick={() => addItem(item)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addItem(item);
+                          }}
                           disabled={item.available < 1}
                           className="cursor-pointer"
                         >
