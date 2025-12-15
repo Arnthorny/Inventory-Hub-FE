@@ -35,6 +35,7 @@ export default function InventoryPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(
     undefined
   );
+  const [selectedLoc, setSelectedLoc] = useState<string | undefined>(undefined);
 
   // 1.5 Debounce the search
   // This variable will only update 500ms AFTER you stop typing
@@ -51,13 +52,15 @@ export default function InventoryPage() {
       currentPage,
       debouncedSearch,
       selectedCategory,
+      selectedLoc,
     ], // <--- Unique key per page per search per category
     queryFn: () =>
       clientService.getItems(
         currentPage,
         ITEMS_PER_PAGE,
         debouncedSearch,
-        selectedCategory
+        selectedCategory,
+        selectedLoc
       ),
     // Keep previous data visible while fetching next page (prevents layout jump)
     placeholderData: (previousData) => previousData,
@@ -69,13 +72,20 @@ export default function InventoryPage() {
     staleTime: 1000 * 60 * 30,
   });
 
+  const { data: locations = [] } = useQuery({
+    queryKey: ["locations"],
+    queryFn: () => clientService.getLocations(),
+    staleTime: 1000 * 60 * 30,
+  });
+
   useEffect(() => {
     setCurrentPage(1);
   }, [debouncedSearch, selectedCategory]);
 
   const clearFilters = () => {
     setSearchQuery("");
-    setSelectedCategory(undefined);
+    setSelectedCategory("all");
+    setSelectedLoc("all");
   };
 
   const items = items_res?.results || [];
@@ -151,8 +161,34 @@ export default function InventoryPage() {
           </Select>
         </div>
 
+        {/* Location Filter */}
+        <RoleGate allowedRoles={["admin"]}>
+          <div className="w-full sm:w-48">
+            <Select
+              value={selectedLoc}
+              onValueChange={(val) =>
+                setSelectedLoc(val === "all" ? undefined : val)
+              }
+            >
+              <SelectTrigger>
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <SelectValue placeholder="Location" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Locations</SelectItem>
+                {locations.map((loc: string) => (
+                  <SelectItem key={loc} value={loc}>
+                    {loc}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </RoleGate>
         {/* Clear Filters Button */}
-        {(searchQuery || selectedCategory) && (
+        {(searchQuery || selectedCategory || selectedLoc) && (
           <Button
             variant="ghost"
             size="sm"

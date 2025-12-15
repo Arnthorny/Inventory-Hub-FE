@@ -85,7 +85,6 @@ export default function AdminUsersPage() {
               <SelectItem value="all">All Users</SelectItem>
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="inactive">Inactive</SelectItem>
-              {/* Assuming you have a 'pending' status for new signups */}
               <SelectItem value="new">New/Pending</SelectItem>
             </SelectContent>
           </Select>

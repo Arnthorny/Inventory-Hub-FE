@@ -16,7 +16,8 @@ export const itemsService = {
     page: number = 1,
     limit: number = 10,
     search?: string,
-    category?: string
+    category?: string,
+    location?: string
   ): Promise<{ items_res: PaginatedListBase<Item> | null; error: any }> {
     const token = await authService.getAccessToken();
 
@@ -29,6 +30,7 @@ export const itemsService = {
 
     if (search) sParams["search"] = search;
     if (category) sParams["category"] = category;
+    if (location) sParams["location"] = location;
     url.search = new URLSearchParams(sParams).toString();
 
     try {
@@ -218,6 +220,40 @@ export const itemsService = {
     } catch (error) {
       console.error("Items service exception:", error);
       return { res: null, error };
+    }
+  },
+  
+  async getLocations(): Promise<{ locations: string[] | null; error: any }> {
+    const token = await authService.getAccessToken();
+
+    const url = new URL(`${API_URL}/items/locations`);
+
+    try {
+      const res = await fetcher(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const json = await res.json();
+
+      if (res.ok) {
+        console.log("Fetched locations count: ", json?.data?.length || []);
+        return { locations: json.data || [], error: null };
+      }
+
+      let errMsg: string =
+        json.errors || json.message || "locations Retrieval Failed";
+      if (Array.isArray(errMsg)) {
+        errMsg = errMsg.map((e: any) => e.msg).join(", ");
+      }
+
+      throw new ApiError(errMsg, res.status);
+    } catch (error) {
+      console.error("Items service exception:", error);
+      return { locations: null, error };
     }
   },
 };

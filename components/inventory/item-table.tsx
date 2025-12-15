@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import type { Item } from "@/lib/types";
 import { useRequestStore } from "@/hooks/use-request-store";
 import { ItemAdminActions } from "./item-admin-actions";
+import { useRouter } from "next/navigation";
 
 interface ItemTableProps {
   items: Item[];
@@ -29,6 +30,8 @@ export function ItemTable({
   const { addItem, removeItem, items: cartItems } = useRequestStore();
   const getTotalQuantity = (item: Item) => item?.total || 0;
 
+  const router = useRouter();
+
   return (
     <div className="border border-border rounded-lg overflow-hidden">
       <Table>
@@ -38,6 +41,7 @@ export function ItemTable({
             <TableHead>Category</TableHead>
             {isAdmin ? (
               <>
+                <TableHead>Location</TableHead>
                 <TableHead className="text-right">Available</TableHead>
                 <TableHead className="text-right">In Use</TableHead>
                 <TableHead className="text-right">Damaged</TableHead>
@@ -57,7 +61,7 @@ export function ItemTable({
           {items.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={isAdmin ? 8 : 4}
+                colSpan={isAdmin ? 9 : 4}
                 className="text-center text-muted-foreground py-8"
               >
                 No items available
@@ -69,14 +73,18 @@ export function ItemTable({
                 (cartItem) => cartItem.id === item.id
               );
               return (
-                <TableRow key={item.id} className="hover:bg-muted/50">
+                <TableRow
+                  key={item.id}
+                  className="hover:bg-muted/50 cursor-pointer"
+                  onClick={() => router.push(`/inventory/${item.id}`)}
+                >
                   <TableCell>
                     <div>
                       <p className="font-medium">{item.name}</p>
                       {item.description && (
                         <p className="text-xs text-muted-foreground">
-                          {item.description.length > 70
-                            ? `${item.description.slice(0, 70)}...`
+                          {item.description.length > 40
+                            ? `${item.description.slice(0, 40)}...`
                             : item.description}
                         </p>
                       )}
@@ -89,6 +97,7 @@ export function ItemTable({
                   </TableCell>
                   {isAdmin ? (
                     <>
+                      <TableCell>{item.location}</TableCell>
                       <TableCell className="text-right">
                         {item.available}
                       </TableCell>
@@ -124,29 +133,27 @@ export function ItemTable({
                       />
                     </TableCell>
                   ) : (
-                    <TableCell>
-                      <div className="flex gap-1">
-                        {isInCart ? (
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => removeItem(item.id)}
-                            className="cursor-pointer"
-                          >
-                            Remove
-                          </Button>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => addItem(item)}
-                            disabled={item.available < 1}
-                            className="cursor-pointer"
-                          >
-                            Request
-                          </Button>
-                        )}
-                      </div>
+                    <TableCell className="text-right">
+                      {isInCart ? (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => removeItem(item.id)}
+                          className="cursor-pointer"
+                        >
+                          Remove
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => addItem(item)}
+                          disabled={item.available < 1}
+                          className="cursor-pointer"
+                        >
+                          Request
+                        </Button>
+                      )}
                     </TableCell>
                   )}
                 </TableRow>

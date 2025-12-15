@@ -38,7 +38,8 @@ export const clientService = {
     currentPage: number,
     ITEMS_PER_PAGE: number,
     debouncedSearch: string,
-    selectedCategory?: string
+    selectedCategory?: string,
+    selectedLoc?: string
   ) {
     const params = new URLSearchParams({
       page: String(currentPage),
@@ -49,6 +50,9 @@ export const clientService = {
 
     if (selectedCategory && selectedCategory !== "all")
       params.append("category", selectedCategory);
+
+    if (selectedLoc && selectedLoc !== "all")
+      params.append("location", selectedLoc);
 
     const res = await fetch(`/api/items?${params.toString()}`);
     if (!res.ok) throw new Error("Failed to fetch items");
@@ -61,6 +65,13 @@ export const clientService = {
     if (!res.ok) return ["general", "design", "prototyping", "electronics"];
     const { categories } = await res.json();
     return categories;
+  },
+
+  async getLocations() {
+    const res = await fetch("/api/items/locations");
+    if (!res.ok) return [];
+    const { locations } = await res.json();
+    return locations;
   },
 
   async submitRequest(

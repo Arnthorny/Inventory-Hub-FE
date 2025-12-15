@@ -10,7 +10,14 @@ import { RequestStatusBadge } from "@/components/requests/request-status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Calendar, User, Box, AlertTriangle } from "lucide-react";
+import {
+  ChevronLeft,
+  Calendar,
+  User,
+  Box,
+  AlertTriangle,
+  MapPin,
+} from "lucide-react";
 import { format } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { clientService } from "@/lib/services/client-service";
@@ -104,6 +111,7 @@ export default function RequestDetailsPage({
                 Requested Items ({(request.items && request.items.length) || 0})
               </CardTitle>
             </CardHeader>
+
             <CardContent>
               <div className="divide-y border rounded-md">
                 {request.items &&
@@ -112,8 +120,21 @@ export default function RequestDetailsPage({
                       key={item.id}
                       className="p-4 flex justify-between items-center"
                     >
-                      <span className="font-medium">{item.name}</span>
-                      <span className="text-sm bg-muted px-2 py-1 rounded">
+                      {/* LEFT SIDE: Name & Location */}
+                      <div className="flex flex-col gap-1">
+                        <span className="font-medium">{item.name}</span>
+
+                        {/* Location Subtitle */}
+                        <RoleGate allowedRoles={["admin"]}>
+                        <div className="flex items-center text-xs text-muted-foreground">
+                          <MapPin className="mr-1 h-3 w-3" />
+                          <span>{item.location || "Location N/A"}</span>
+                        </div>
+                        </RoleGate>
+                      </div>
+
+                      {/* RIGHT SIDE: Quantity */}
+                      <span className="text-sm bg-muted px-2 py-1 rounded font-mono">
                         Qty: {item.quantity}
                       </span>
                     </div>

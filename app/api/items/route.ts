@@ -10,12 +10,14 @@ export async function GET(request: NextRequest) {
 
     const search = searchParams.get("search") || undefined;
     const category = searchParams.get("category") || undefined;
+    const location = searchParams.get("location") || undefined;
 
     const { items_res, error } = await itemsService.getItems(
       +page,
       +limit,
       search,
-      category
+      category,
+      location
     );
 
     if (error) throw error;
